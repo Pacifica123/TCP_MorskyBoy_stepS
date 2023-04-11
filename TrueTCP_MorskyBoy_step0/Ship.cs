@@ -9,10 +9,10 @@ namespace Server
 {
     internal class Ship
     {
-        int type; //тип корабля
+        public int type; //тип корабля
         int hp; //текущий размер корабля
         bool status; //цел/потоплен
-        List<SeaCell> cellList; // координаты ячеек корабля
+        public List<SeaCell> cellList; // координаты ячеек корабля
         public enum vectoring
         {
             vertical,

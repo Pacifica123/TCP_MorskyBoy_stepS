@@ -50,9 +50,14 @@ namespace Server
             {
                 TcpClient client = listener.AcceptTcpClient(); 
                 Console.WriteLine("Зафиксирована активность клиента: {0}", client.Client.RemoteEndPoint);
-                if (game.player1.id == null) { game.player1.id = client.Client.RemoteEndPoint; } 
-                if (game.player2.id == null && game.player1.id != null && client.Client.RemoteEndPoint != game.player1.id) 
+                if (game.player1 == null) 
+                { 
+                    game.player1 = new Player(); 
+                    game.player1.id = client.Client.RemoteEndPoint; 
+                } 
+                else if (game.player2 == null && client.Client.RemoteEndPoint != game.player1.id) 
                 {
+                    game.player2 = new Player();
                     game.player2.id = client.Client.RemoteEndPoint;
                 }
                 

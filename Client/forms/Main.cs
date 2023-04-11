@@ -65,7 +65,10 @@ namespace Client.forms
             string message = "";
             foreach (Point p in selectedCellsCoordlist)
             {
-                message += p.ToString();
+                // меняем местами икреги с иксами из-за датагрида
+                Point correctP = new Point(p.Y, p.X);
+
+                message += correctP.ToString();
             }
             client = new TcpClient(ipServer, 8888);
             stream = client.GetStream();
