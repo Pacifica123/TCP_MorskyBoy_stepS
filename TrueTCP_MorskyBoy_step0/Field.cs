@@ -33,19 +33,22 @@ namespace Server
             {
                 SeaCell cell = new SeaCell(p, SeaCell.state.filled_ship); // заполняем поле занятыми кораблями клетками
                 filledcells.Add(cell);
-                //обновляем поле, заносим инфу о заполненных клетках
-                foreach (List<SeaCell> row in cells)
-                    foreach (SeaCell c in row)
-                        if (c.coordinate == p) { c.current_state = SeaCell.state.filled_ship; }; 
+                updateCells(p);
             }
-            // TODO: для обновления состояния поля потом можно отдельную функцию написать..
-
-
         }
         // как вариант: сканирует сразу всю карту для полноценного расставления всех кораблей.
         public void scanmap()
         {
             //мб и не войд, пока так..
+        }
+        public void updateCells(System.Drawing.Point p)
+        {
+            /// <summary> 
+            /// обновляем поле, заносим инфу о заполненных клетках
+            /// </summary>
+            foreach (List<SeaCell> row in cells)
+                foreach (SeaCell c in row)
+                    if (c.coordinate == p) { c.current_state = SeaCell.state.filled_ship; };
         }
     }
 }

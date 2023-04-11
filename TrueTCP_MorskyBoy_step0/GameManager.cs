@@ -9,28 +9,43 @@ namespace Server
 {
     // управляет процессом игры
     // создает объекты и запсукает игру для каждого игрока
+
+    /// <summary>
+    /// ЗДЕСЬ ТОЛЬКО МЕТОДЫ
+    /// </summary>
     internal class GameManager
     {
 
         public GameManager() 
         {
-            //опасно, т.к. можно забыть что поля отсюда использовать нельзя...
-            // (как вариант, можно для безопасности передовать текущее состояние игры по функциям в параметры)
-            Game game = new Game(); // это класс в основном будет возвращать bool (вернее только использоваться)
+            
         }
-        // возвращает "OK" если расстановка прошла успешна
-        // "error" - если правила нарушены
-        // также изменяет состояние классов Field и Game
-        public string Rasstanovka(string stringList)
+        /// <summary>
+        /// Преобразует результат проверки правил в текст и изменяет состояние классов Field и Game
+        /// </summary>
+        /// <param name="stringList"></param>
+        /// <returns>
+        /// возвращает "OK" если расстановка прошла успешна;
+        /// "error" - если правила нарушены
+        /// </returns>
+        public static string Rasstanovka(string stringList)
         {
             stringList = stringList.Substring(5);
-            Console.WriteLine(stringList); //DeBug
+            Console.WriteLine(stringList); //DeBug на сервер 
             List<System.Drawing.Point> exemple = new List<System.Drawing.Point>();
+            //"пример" точек который потом нужно "решить"
             exemple = stringTransformToList(stringList); // этот екземпл можно потом прокатить по правилам..
             //game.Rules(exemple) 
+            bool IsCorrect = new Game().CheckGameRule_rasstanovka(exemple);
+            if (!IsCorrect) return "Неправильная расстановка"; //далее просто переадим это клиенту а он там пусть сам гадает че не так сделал..
             return "OK";
         }
-        private List<System.Drawing.Point> stringTransformToList(string stringList)
+        /// <summary>
+        /// Преобразует строку координат в Список точек с координатами
+        /// </summary>
+        /// <param name="stringList"></param>
+        /// <returns>массив координат расстановленных клеток</returns>
+        private static List<System.Drawing.Point> stringTransformToList(string stringList)
         {
             List<System.Drawing.Point> exemple = new List<System.Drawing.Point>();
             List<int> buff = new List<int>();

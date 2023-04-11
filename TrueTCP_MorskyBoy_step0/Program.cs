@@ -8,15 +8,22 @@ namespace Server
 {
     internal class Program
     {
+        public static Player player1, player2;
+        public static Game game;
+        public static GameManager gameManager;
         static void Main(string[] args)
         {
             Console.WriteLine("Сервер включается...");
             //Создаем прослушиватель Сервера
             // сокет для конкретного Клиента
             // Засовываем все это в ООП...
+            game = new Game();
+            gameManager = new GameManager();
+            player1 = new Player(); player2 = new Player();
             TheNetworkManager networkManager = new TheNetworkManager(Dns.GetHostByName(Dns.GetHostName()).AddressList[0], 8888);
-            networkManager.Start();
+            networkManager.Start(game, gameManager);
         }
+
         // РЕАЛИЗАЦИЯ ЛОГИКИ ИГРЫ
         /*
          *  1. Одна функция на обработку всех ответов/запросов Сервером - ProcessMessage
