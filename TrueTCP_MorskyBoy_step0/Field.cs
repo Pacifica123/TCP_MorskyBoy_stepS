@@ -10,6 +10,7 @@ namespace Server
     {
         public List<List<SeaCell>> cells;
         public List<SeaCell> filledcells;
+        public List<Ship> ships;
 
         public Field()
         {
@@ -26,6 +27,10 @@ namespace Server
             }
                 
         }
+        /// <summary>
+        /// Заполняет объект текущего поля клетками на соответствующих координатах
+        /// </summary>
+        /// <param name="coordList"></param>
         public void fill(List<System.Drawing.Point> coordList)
         {
             filledcells = new List<SeaCell>();
@@ -35,17 +40,19 @@ namespace Server
                 filledcells.Add(cell);
                 updateCells(p);
             }
-        }
-        // как вариант: сканирует сразу всю карту для полноценного расставления всех кораблей.
+        } 
+        /// <summary>
+        /// сканирует сразу всю карту для полноценного расставления всех кораблей.
+        /// </summary>
         public void scanmap()
         {
-            //мб и не войд, пока так..
+            
         }
+        /// <summary> 
+        /// обновляем поле, заносим инфу о заполненных клетках
+        /// </summary>
         public void updateCells(System.Drawing.Point p)
         {
-            /// <summary> 
-            /// обновляем поле, заносим инфу о заполненных клетках
-            /// </summary>
             foreach (List<SeaCell> row in cells)
                 foreach (SeaCell c in row)
                     if (c.coordinate == p) { c.current_state = SeaCell.state.filled_ship; };
