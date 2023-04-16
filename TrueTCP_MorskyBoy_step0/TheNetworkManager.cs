@@ -48,6 +48,10 @@ namespace Server
             //Начинаем бесконечное прослушивание
             while (true)
             {
+                // TODO:
+                /*
+                 * if (оба игрока готовы) { Game.Start(); для начала самой игры; RecieveData(код перехода режимы игры на Клиенте); 
+                 */
                 TcpClient client = listener.AcceptTcpClient(); 
                 Console.WriteLine("Зафиксирована активность клиента: {0}", client.Client.RemoteEndPoint);
                 if (game.player1 == null) 
