@@ -104,7 +104,7 @@ namespace Server
         private void ReceiveData(NetworkStream stream)
         {
             // метод принимает данные от другого игрока
-            buffer = new byte[1024];
+            buffer = new byte[256];
             int bytesRead;
 
             //while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)

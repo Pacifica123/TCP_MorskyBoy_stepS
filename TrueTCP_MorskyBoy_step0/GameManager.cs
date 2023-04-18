@@ -30,6 +30,9 @@ namespace Server
         /// </returns>
         public static string Rasstanovka(string stringList)
         {
+            // TODO: десереализовать список кораблей
+
+            /*
             stringList = stringList.Substring(5);
             Console.WriteLine(stringList); //DeBug на сервер 
             List<System.Drawing.Point> exemple = new List<System.Drawing.Point>();
@@ -38,6 +41,8 @@ namespace Server
             //game.Rules(exemple) 
             bool IsCorrect = new Game().CheckGameRule_rasstanovka(exemple);
             if (!IsCorrect) return "Неправильная расстановка"; //далее просто переадим это клиенту а он там пусть сам гадает че не так сделал..
+            return "OK";
+            */
             return "OK";
         }
         /// <summary>

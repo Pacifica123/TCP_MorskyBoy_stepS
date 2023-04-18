@@ -6,6 +6,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Net.Sockets;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -71,10 +72,66 @@ namespace Client.forms
         /// <param name="e"></param>
         private void butStart_Click(object sender, EventArgs e)
         {
-            // TODO: контрольная сумма на 20 закрашенных клеток
+            // контрольная сумма на 20 закрашенных клеток
+            int controlsum = 0;
+            for (int col = 0; col < 10; col++)
+                for (int row = 0; row < 10; row++)
+                    if (dgvYourSea[col, row].Style.BackColor == Color.BlueViolet) controlsum++;
+            if (controlsum != 20)
+            {
+                MessageBox.Show("Итого на карте должно быть ровно 20 клеток!");
+                resetShip();
+                return;
+            }
 
             // TODO: сериализация кораблей..
-            MessageBox.Show("Далее идет сериализация кораблей");
+            MessageBox.Show("Корабли отправляются в плавание на сервер!");
+
+            // сериализуем в байтовый массив весь сет кораблей
+            BinaryFormatter formatter = new BinaryFormatter();
+            byte[] label = Encoding.UTF8.GetBytes("rasst");
+            byte[] data;
+            using (var stream = new System.IO.MemoryStream())
+            {
+                formatter.Serialize(stream, shipSET);
+                data = stream.ToArray();
+            }
+            byte[] message = new byte[label.Length + data.Length + 10]; //метка+корабли
+            Buffer.BlockCopy(label, 0, message, 0, label.Length);
+            Buffer.BlockCopy(data, 0, message, label.Length, data.Length);
+            // отправляем на сервер
+            client = new TcpClient(ipServer, 8888);
+            stream = client.GetStream();
+            try
+            {
+                //отправляем ответ с Клиента
+                stream.Write(message, 0, message.Length);
+                //собираем ответ с Сервака
+                byte[] responseBytes = new byte[1024];
+                int bytesRead = stream.Read(responseBytes, 0, responseBytes.Length);
+                string response = Encoding.ASCII.GetString(responseBytes, 0, bytesRead);
+                // if(response == "error") resetShip();
+                //если все хорошо, то сервер вернет "OK"
+                MessageBox.Show(response);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
+            //BinaryFormatter formatter = new BinaryFormatter();
+            //byte[] label = Encoding.UTF8.GetBytes("rasst");
+            //byte[] data;
+
+            //foreach(Ship sh in shipSET)
+            //{
+            //    client = new TcpClient(ipServer, 8888);
+            //    NetworkStream stream = client.GetStream();
+            //    formatter.Serialize(stream, sh);
+
+            //    Buffer.BlockCopy(label, 0, message, 0, message.Length);
+            //}
+
             return;
 
             //string message = "";

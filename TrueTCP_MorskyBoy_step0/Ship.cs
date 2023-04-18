@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace Server
 {
+    [Serializable]
     internal class Ship
     {
         public int type; //тип корабля

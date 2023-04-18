@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Server
 {
+    [Serializable]
     internal class SeaCell
     {
         //содержит информацию о ее состоянии (свободна/занята кораблем/подбита) - мб структурой описать её?
