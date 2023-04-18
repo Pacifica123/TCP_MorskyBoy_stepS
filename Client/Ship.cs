@@ -10,7 +10,7 @@ namespace Server
     internal class Ship
     {
         public int type; //тип корабля
-      //  int hp; //текущий размер корабля
+        int hp; //текущий размер корабля
         bool status; //цел/потоплен
         public List<SeaCell> cellList; // координаты ячеек корабля
         public enum vectoring
@@ -19,24 +19,23 @@ namespace Server
             horizontal
         }
         public Ship.vectoring vec;
-        public Ship(int _type, List<SeaCell> coordList, vectoring vectoring)
+        public Ship(int type, List<SeaCell> coordList, vectoring vectoring)
         {
-            this.type = _type;
+            this.type = type;
             this.cellList = coordList;
-            //hp = type;
-            this.vec = vectoring;
-            this.status = true;
+            hp = type;
+            vec = vectoring;
         }
         public bool DamageAndCheck(Point demagedCell)
         {
             // операция не прошла т.к. это уже использованное поле
             if (cellList[demagedCell.X*10+demagedCell.Y].current_state == SeaCell.state.broken) { return false; } 
-            type--;
+            hp--;
             foreach(SeaCell cell in cellList)
             {
                 if (cell.coordinate == demagedCell) cell.current_state = SeaCell.state.broken;
             }
-            if (type == 0) { status = false; }
+            if (hp == 0) { status = false; }
             return true; // операция удалась успешно
         }
     }

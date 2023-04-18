@@ -80,7 +80,7 @@ namespace Server
                     if (filledcells.Exists(cell => cell.coordinate.Equals(cells[row][col].coordinate)) && filledcells.Exists(cell => cell.current_state.Equals(cells[row][col].current_state)))
                     {
                         // Создаем корабль
-                        Ship ship = new Ship(1, new List<SeaCell>().Add(cells[row][col]), Ship.vectoring.horizontal);
+                        //Ship ship = new Ship(1, new List<SeaCell>().Add(cells[row][col]), Ship.vectoring.horizontal);
                     }
 
                 }
