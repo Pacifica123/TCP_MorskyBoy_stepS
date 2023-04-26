@@ -21,8 +21,10 @@ namespace Server
         NetworkStream stream;
         TcpListener listener;
 
-        byte[] buffer;
+        static byte[] buffer;
         string message;
+
+        static Game bufferGame;
 
         public TheNetworkManager(IPAddress serverIP, int serverPort)
         {
@@ -44,28 +46,39 @@ namespace Server
         public void Start(Game game, GameManager gmForProcessGame)
         {
             listener.Start();
+            bufferGame = game;
             Console.WriteLine("Сервер получил старт на порту 8888");
             //Начинаем бесконечное прослушивание
             while (true)
             {
-                // TODO:
+                // TODO:if (оба игрока готовы)
                 /*
                  * if (оба игрока готовы) { Game.Start(); для начала самой игры; RecieveData(код перехода режимы игры на Клиенте); 
                  */
                 TcpClient client = listener.AcceptTcpClient(); 
                 Console.WriteLine("Зафиксирована активность клиента: {0}", client.Client.RemoteEndPoint);
-                if (game.player1 == null) 
-                { 
-                    game.player1 = new Player(); 
-                    game.player1.id = client.Client.RemoteEndPoint; 
-                } 
-                else if (game.player2 == null && client.Client.RemoteEndPoint != game.player1.id) 
+                if (bufferGame.player1 == null) 
                 {
-                    game.player2 = new Player();
-                    game.player2.id = client.Client.RemoteEndPoint;
+                    Console.WriteLine("Присоединился первый игрок");
+                    bufferGame.player1 = new Player();
+                    bufferGame.player1.id = client.Client.RemoteEndPoint; 
+                    bufferGame.currentPlayer = bufferGame.player1;
+                } 
+                else if (bufferGame.player2 == null && client.Client.RemoteEndPoint != bufferGame.player1.id) 
+                {
+                    Console.WriteLine("Присоединился второй игрок");
+                    bufferGame.player2 = new Player();
+                    bufferGame.player2.id = client.Client.RemoteEndPoint;
+                    bufferGame.currentPlayer = bufferGame.player2;
                 }
                 
+                if(client.Client.RemoteEndPoint == bufferGame.player1.id)
+                {
+                    bufferGame.currentPlayer = bufferGame.player1;
+                }
+                else bufferGame.currentPlayer = bufferGame.player2;
 
+                // TODO: (если останется время)
                 // создаем новый поток на каждого клиента для производительности и безопасности
                 //Thread clientThread = new Thread(() => HandleClient(client));
                 //clientThread.Start();
@@ -104,7 +117,7 @@ namespace Server
         private void ReceiveData(NetworkStream stream)
         {
             // метод принимает данные от другого игрока
-            buffer = new byte[256];
+            buffer = new byte[2048];
             int bytesRead;
 
             //while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
@@ -114,6 +127,7 @@ namespace Server
             //}
             bytesRead = stream.Read(buffer, 0, buffer.Length);
             message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+           // if (message.Contains("rasst")) { };
             Console.WriteLine("Сервер получил сообщение: {0}", message);
         }
 
@@ -126,10 +140,9 @@ namespace Server
         private static string ProcessMessage(string message)
         {
             // TODO: здесь будем реализовывать узел логики игры...
-
             if (message == "good") return "conected"; //проверка работы сервера
-            //(определяем куда в какой класс запихать функцию)
-            if (message.Contains("rasst")) return GameManager.Rasstanovka(message);
+            // Массив кораблей для расстановки:
+            if (message.Contains("rasst")) return GameManager.Rasstanovka(message.Replace("rasst", ""), bufferGame);
 
 
             return "OK";

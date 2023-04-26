@@ -10,6 +10,10 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Newtonsoft.Json;
+using System.Text.Json;
+using System.Xml.XPath;
+using System.IO;
 
 namespace Client.forms
 {
@@ -20,6 +24,7 @@ namespace Client.forms
         private NetworkStream stream;
         private string ipServer;
         private List<Ship> shipSET;
+        
 
         public Main()
         {
@@ -84,22 +89,14 @@ namespace Client.forms
                 return;
             }
 
-            // TODO: сериализация кораблей..
             MessageBox.Show("Корабли отправляются в плавание на сервер!");
 
-            // сериализуем в байтовый массив весь сет кораблей
-            BinaryFormatter formatter = new BinaryFormatter();
-            byte[] label = Encoding.UTF8.GetBytes("rasst");
-            byte[] data;
-            using (var stream = new System.IO.MemoryStream())
-            {
-                formatter.Serialize(stream, shipSET);
-                data = stream.ToArray();
-            }
-            byte[] message = new byte[label.Length + data.Length + 10]; //метка+корабли
-            Buffer.BlockCopy(label, 0, message, 0, label.Length);
-            Buffer.BlockCopy(data, 0, message, label.Length, data.Length);
-            // отправляем на сервер
+            //ПОПЫТКА 3
+            string json = JsonConvert.SerializeObject(shipSET);
+            byte[] message;
+            
+            message = Encoding.UTF8.GetBytes("rasst" + json); //метка+корабли
+
             client = new TcpClient(ipServer, 8888);
             stream = client.GetStream();
             try
@@ -110,7 +107,7 @@ namespace Client.forms
                 byte[] responseBytes = new byte[1024];
                 int bytesRead = stream.Read(responseBytes, 0, responseBytes.Length);
                 string response = Encoding.ASCII.GetString(responseBytes, 0, bytesRead);
-                // if(response == "error") resetShip();
+                //TODO: if(response == "error") resetShip();
                 //если все хорошо, то сервер вернет "OK"
                 MessageBox.Show(response);
             }
@@ -119,42 +116,8 @@ namespace Client.forms
                 MessageBox.Show(ex.Message);
             }
 
-            //BinaryFormatter formatter = new BinaryFormatter();
-            //byte[] label = Encoding.UTF8.GetBytes("rasst");
-            //byte[] data;
-
-            //foreach(Ship sh in shipSET)
-            //{
-            //    client = new TcpClient(ipServer, 8888);
-            //    NetworkStream stream = client.GetStream();
-            //    formatter.Serialize(stream, sh);
-
-            //    Buffer.BlockCopy(label, 0, message, 0, message.Length);
-            //}
-
             return;
-
-            //string message = "";
-
-            //client = new TcpClient(ipServer, 8888);
-            //stream = client.GetStream();
-            
-            //byte[] messageBytes = Encoding.ASCII.GetBytes("rasst" + message);
-            //try
-            //{
-            //    //отправляем кодовое слово для проверки работы сервера
-            //    stream.Write(messageBytes, 0, messageBytes.Length);
-            //    //собираем ответ с Сервака
-            //    byte[] responseBytes = new byte[1024];
-            //    int bytesRead = stream.Read(responseBytes, 0, responseBytes.Length);
-            //    string response = Encoding.ASCII.GetString(responseBytes, 0, bytesRead);
-            //    //если все хорошо, то сервер вернет "conected"
-            //    MessageBox.Show(response);
-            //}
-            //catch (Exception ex)
-            //{
-            //    MessageBox.Show(ex.Message);
-            //}
+           
         }
         private void resetShip()
         {
@@ -171,6 +134,8 @@ namespace Client.forms
         /// </summary>
         private bool EnterShip()
         {
+            // TODO: обработать ситуацию "4ка-квадрат"
+
             Ship ship = new Ship(0, new List<SeaCell>(), Ship.vectoring.horizontal);
             foreach (Point p in selectedCellsCoordlist)
             {
