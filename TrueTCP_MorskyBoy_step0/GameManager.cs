@@ -37,9 +37,10 @@ namespace Server
             List<Ship> shipList = JsonConvert.DeserializeObject<List<Ship>>(stringList);
            
             bool IsCorrect = transportedGame.CheckGameRule_rasstanovka(shipList);
-            if (!IsCorrect) return "Неправильная расстановка"; //далее просто передадим это клиенту а он там пусть сам гадает че не так сделал..
-            //
+            if (!IsCorrect) return "Incorrect set ships!!!"; //далее просто передадим это клиенту а он там пусть сам гадает че не так сделал..
+            //Если все хорошо
             transportedGame.currentPlayer.Sea = transportedGame.buffSea;
+            transportedGame.currentPlayer.status = true;
             return "OK";
         }
         /// <summary>

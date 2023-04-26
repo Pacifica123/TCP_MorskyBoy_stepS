@@ -108,8 +108,9 @@ namespace Client.forms
                 int bytesRead = stream.Read(responseBytes, 0, responseBytes.Length);
                 string response = Encoding.ASCII.GetString(responseBytes, 0, bytesRead);
                 //TODO: if(response == "error") resetShip();
+                if(!response.Contains("OK")) resetAllShips();
                 //если все хорошо, то сервер вернет "OK"
-                MessageBox.Show(response);
+                MessageBox.Show(response + "\nПодождите второго игрока...");
             }
             catch (Exception ex)
             {
@@ -118,6 +119,13 @@ namespace Client.forms
 
             return;
            
+        }
+        private void resetAllShips()
+        {
+            shipSET.Clear();
+            foreach (DataGridViewRow row in dgvYourSea.Rows)
+                foreach (DataGridViewCell cell in row.Cells)
+                    cell.Style.BackColor = Color.White;
         }
         private void resetShip()
         {

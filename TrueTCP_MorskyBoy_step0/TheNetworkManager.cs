@@ -51,10 +51,6 @@ namespace Server
             //Начинаем бесконечное прослушивание
             while (true)
             {
-                // TODO:if (оба игрока готовы)
-                /*
-                 * if (оба игрока готовы) { Game.Start(); для начала самой игры; RecieveData(код перехода режимы игры на Клиенте); 
-                 */
                 TcpClient client = listener.AcceptTcpClient(); 
                 Console.WriteLine("Зафиксирована активность клиента: {0}", client.Client.RemoteEndPoint);
                 if (bufferGame.player1 == null) 
@@ -84,7 +80,16 @@ namespace Server
                 //clientThread.Start();
 
                 HandleClient(client, gmForProcessGame);
-
+                
+                //TODO: if(Game.Started) {отправить player1 и player2 сообщение о начале игры}
+                if (bufferGame.player1 != null && bufferGame.player2 != null)
+                {
+                    if (bufferGame.player1.status && bufferGame.player2.status)
+                    {
+                        bufferGame.GameStarted = true;
+                        //TODO: передать обоим игрокам на Клиент что они оба готовы
+                    }
+                }
             }
         }
 
