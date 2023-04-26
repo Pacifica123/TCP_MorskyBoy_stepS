@@ -13,6 +13,7 @@ namespace Server
         public Player currentPlayer; //текущий игрок чей ход (для режима атаки)
         public bool GameStarted; // флаг начала игры (активируется по завершению расстановки у каждого из игроков)
         public bool GameOver; // флаг конца игры
+        public Field buffSea; // буфер для поля для передачи игроку затем
 
         public Game()
         {
@@ -50,64 +51,27 @@ namespace Server
         /// </summary>
         /// <param name="coordList"></param>
         /// <returns>По умолчанию false на всякий случай</returns>
-        public bool CheckGameRule_rasstanovka(List<System.Drawing.Point> coordList)
+        public bool CheckGameRule_rasstanovka(List<Ship> ships)
         {
 
-            Field buffSea = new Field();
-            buffSea.fill(coordList); // поставит нужные ячейки
-            buffSea.scanmap(); // соберет ячейки в корабли
-            // TODO: далее проверка стандартная на 1)корабли 2)углы 3)тип корабля не больше 4 
-            if (AngleCorrect(buffSea) && ShipCorrect(buffSea) && TypeCorrect(buffSea)) return true;
+            buffSea = new Field();
+            
+            buffSea.fill(ships); // поставит нужные ячейки в соответствии с кораблями
+            buffSea.ships = ships;
+            
+            return ShipCorrect(buffSea);
+        }
 
-            return false; // по умолчанию мы не проходим по правилам (на всякий случай)
-        }
-        /// <summary>
-        /// Проверяет нет ли кораблей, состоящих более чем из 4х клеток
-        /// </summary>
-        /// <returns>true если все нормально</returns>
-        private bool TypeCorrect(Field sea)
-        {
-            // TODO: для функции нужно допилить scanmap 
-            bool result = false; //по умолчанию на всякий
-            return result;
-        }
         /// <summary>
         /// Проверяет, правильное ли соотношение кол-ва кораблей (4х1 3х2 2х3 1х4)
         /// </summary>
         /// <returns>true если все нормально</returns>
         private bool ShipCorrect(Field sea)
         {
-            // TODO: для функции нужно допилить scanmap 
             bool result = false; //по умолчанию на всякий
-            return result;
+            buffSea.shipsetStatWrite();
+            return (buffSea.shipsetStatReturn()[0] == 4 && buffSea.shipsetStatReturn()[1] == 3 && buffSea.shipsetStatReturn()[2] == 2 && buffSea.shipsetStatReturn()[3] == 1);
         }
-        /// <summary>
-        /// Проверяет, нет ли клеток, сопрекасающихся по углам или друг к другу
-        /// </summary>
-        /// <returns>true если все нормально</returns>
-        private bool AngleCorrect(Field sea)
-        {
-            bool result = true;
-            for (int i = 0; i < sea.filledcells.Count; i++)
-            {
-                int x = sea.filledcells[i].coordinate.X;
-                int y = sea.filledcells[i].coordinate.Y;
-                // Проверяем, есть ли занятые клетки сверху-слева, сверху-справа, снизу-слева, снизу-справа
-                // В случае нахождения занятой клетки рядом с текущей, возвращаем false
-                if ((y > 0 && x > 0 && sea.cells[y - 1][x - 1].current_state != SeaCell.state.free) ||
-                (y > 0 && x < sea.cells[y].Count - 1 && sea.cells[y - 1][x + 1].current_state != SeaCell.state.free) ||
-                (y < sea.cells.Count - 1 && x > 0 && sea.cells[y + 1][x - 1].current_state != SeaCell.state.free) ||
-                (y < sea.cells.Count - 1 && x < sea.cells[y].Count - 1 && sea.cells[y + 1][x + 1].current_state != SeaCell.state.free) ||
-                (y > 0 && sea.cells[y - 1][x].current_state != SeaCell.state.free) ||
-                (y < sea.cells.Count - 1 && sea.cells[y + 1][x].current_state != SeaCell.state.free) ||
-                (x > 0 && sea.cells[y][x - 1].current_state != SeaCell.state.free) ||
-                (x < sea.cells[y].Count - 1 && sea.cells[y][x + 1].current_state != SeaCell.state.free))
-                {
-                    result = false;
-                    break; //досрочно прерываем цикл, если найдена занятая клетка рядом
-                }
-            }
-            return result;
-        }
+      
     }
 }
