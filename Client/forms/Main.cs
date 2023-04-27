@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using System.Text.Json;
 using System.Xml.XPath;
 using System.IO;
+using System.Net;
 
 namespace Client.forms
 {
@@ -111,6 +112,20 @@ namespace Client.forms
                 if(!response.Contains("OK")) resetAllShips();
                 //если все хорошо, то сервер вернет "OK"
                 MessageBox.Show(response + "\nПодождите второго игрока...");
+
+                //Ждем второго
+                TcpListener listener = new TcpListener(8888);
+                listener.Start();
+                TcpClient serverSwitchMod = listener.AcceptTcpClient();
+                if (serverSwitchMod != null && serverSwitchMod.Client.RemoteEndPoint.ToString() == ipServer)
+                {
+                    // TODO: чтение сообщения и преобразование Клиента
+                    byte[] responseBytesServer = new byte[1024];
+                    int bytesCount = serverSwitchMod.GetStream().Read(responseBytesServer, 0, responseBytesServer.Length);
+                    // на выходе от Сервака получаем чья сейчас очередь - этого клиента или противника
+                    string whoseMove = Encoding.ASCII.GetString(responseBytesServer, 0, bytesCount);
+                    GameTransformation(whoseMove);
+                }
             }
             catch (Exception ex)
             {
@@ -403,6 +418,14 @@ namespace Client.forms
                     else return true;
                 }
             }
+        }
+        /// <summary>
+        /// Преобразует Клиента, открывает чужое поле и закрывает для изменения свое
+        /// </summary>
+        private void GameTransformation(string whoseTurn)
+        {
+            if (whoseTurn.Contains("you")) { MessageBox.Show("Ваш ход."); return; }
+            else MessageBox.Show("Сейчас ход противника.");
         }
     }
 }

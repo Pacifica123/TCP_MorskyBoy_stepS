@@ -32,7 +32,7 @@ namespace Server
             this.serverPort = serverPort;
            // this.client = client;
            // this.stream = stream;
-            listener = new TcpListener(IPAddress.Any, 8888); // собирает всех подряд клиентов
+            listener = new TcpListener(IPAddress.Any, serverPort); // собирает всех подряд клиентов
         }
 
         public void ConnectToServer()
@@ -87,7 +87,12 @@ namespace Server
                     if (bufferGame.player1.status && bufferGame.player2.status)
                     {
                         bufferGame.GameStarted = true;
+                        game.currentPlayer = game.player1;
                         //TODO: передать обоим игрокам на Клиент что они оба готовы
+                        TcpClient player1 = new TcpClient(game.player1.id.ToString(), serverPort);
+                        SendData("your_turn", player1.GetStream());
+                        TcpClient player2 = new TcpClient(game.player2.id.ToString(), serverPort);
+                        SendData("opponent_turn", player2.GetStream());
                     }
                 }
             }
