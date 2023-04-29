@@ -10,8 +10,9 @@ namespace Server
 {
     internal class Player
     {
-        public EndPoint id; //используем айпишник для идентификации игрока
-        bool status; //готов/не готов
+        public EndPoint id { get; set; } //используем айпишник для идентификации игрока
+        public bool status { get; set; }//готовв/не готов
+        public Field Sea { get; set; }
 
         public Player() 
         {

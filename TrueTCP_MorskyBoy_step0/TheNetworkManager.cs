@@ -15,6 +15,7 @@ namespace Server
     internal class TheNetworkManager
     {
         IPAddress serverIP;
+        string GlobalIP;
         int serverPort;
 
         TcpClient client;

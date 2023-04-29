@@ -20,6 +20,9 @@ namespace Server
             game = new Game();
             gameManager = new GameManager();
             player1 = new Player(); player2 = new Player();
+            WebClient webServer = new WebClient();
+            webServer.DownloadString("https://api.ipify.org");
+            
             TheNetworkManager networkManager = new TheNetworkManager(Dns.GetHostByName(Dns.GetHostName()).AddressList[0], 8888);
             networkManager.Start(game, gameManager);
         }
