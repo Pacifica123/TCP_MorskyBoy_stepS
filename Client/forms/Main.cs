@@ -120,7 +120,7 @@ namespace Client.forms
                 //listener.Start();
                 // TcpClient serverSwitchMod = listener.AcceptTcpClient();
                // TcpClient serverSwitchMod = client.Client.L
-                if (client != null && client.Client.RemoteEndPoint.ToString() == ipServer)
+                if (client != null && client.Client.RemoteEndPoint.ToString().Contains(ipServer))
                 {
                     // TODO: чтение сообщения и преобразование Клиента
                     byte[] responseBytesServer = new byte[1024];
