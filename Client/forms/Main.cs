@@ -114,22 +114,25 @@ namespace Client.forms
                 MessageBox.Show(response + "\nПодождите второго игрока...");
 
                 //Ждем второго
-                TcpListener listener = new TcpListener(8888);
-                listener.Start();
-                TcpClient serverSwitchMod = listener.AcceptTcpClient();
-                if (serverSwitchMod != null && serverSwitchMod.Client.RemoteEndPoint.ToString() == ipServer)
+                // client.Close();
+                // TcpListener listener = new TcpListener(8888);
+               // client.Client.Listen(8888);
+                //listener.Start();
+                // TcpClient serverSwitchMod = listener.AcceptTcpClient();
+               // TcpClient serverSwitchMod = client.Client.L
+                if (client != null && client.Client.RemoteEndPoint.ToString() == ipServer)
                 {
                     // TODO: чтение сообщения и преобразование Клиента
                     byte[] responseBytesServer = new byte[1024];
-                    int bytesCount = serverSwitchMod.GetStream().Read(responseBytesServer, 0, responseBytesServer.Length);
+                    int bytesCount = client.GetStream().Read(responseBytesServer, 0, responseBytesServer.Length);
                     // на выходе от Сервака получаем чья сейчас очередь - этого клиента или противника
                     string whoseMove = Encoding.ASCII.GetString(responseBytesServer, 0, bytesCount);
                     GameTransformation(whoseMove);
                 }
             }
-            catch (Exception ex)
+            catch (SocketException ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show(ex.Message + ex.ErrorCode);
             }
 
             return;

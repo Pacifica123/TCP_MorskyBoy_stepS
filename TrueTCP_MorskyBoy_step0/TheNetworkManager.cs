@@ -87,6 +87,7 @@ namespace Server
                 {
                     if (bufferGame.player1.status && bufferGame.player2.status)
                     {
+                        client.Close();
                         bufferGame.GameStarted = true;
                         game.currentPlayer = game.player1;
                         //TODO: передать обоим игрокам на Клиент что они оба готовы
