@@ -428,6 +428,8 @@ namespace Client.forms
         private void GameTransformation(string whoseTurn)
         {
             if (whoseTurn.Contains("you")) { MessageBox.Show("Ваш ход."); return; }
+            else if (whoseTurn == "" || whoseTurn == null || !whoseTurn.Contains("opponent"))
+            { MessageBox.Show("Второй игрок ещё не расставил или не подключился. Нажмите эту кнопку позже."); return; }
             else MessageBox.Show("Сейчас ход противника.");
         }
     }

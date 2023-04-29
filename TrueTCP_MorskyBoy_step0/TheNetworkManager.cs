@@ -61,7 +61,7 @@ namespace Server
                     bufferGame.player1.id = client.Client.RemoteEndPoint; 
                     bufferGame.currentPlayer = bufferGame.player1;
                 } 
-                else if (bufferGame.player2 == null && client.Client.RemoteEndPoint != bufferGame.player1.id) 
+                else if (bufferGame.player2 == null && !bufferGame.player1.id.ToString().Contains(client.Client.RemoteEndPoint.ToString().Split(':')[0])) 
                 {
                     Console.WriteLine("Присоединился второй игрок");
                     bufferGame.player2 = new Player();
@@ -69,7 +69,7 @@ namespace Server
                     bufferGame.currentPlayer = bufferGame.player2;
                 }
                 
-                if(client.Client.RemoteEndPoint == bufferGame.player1.id)
+                if(bufferGame.player1.id.ToString().Contains(client.Client.RemoteEndPoint.ToString().Split(':')[0]))
                 {
                     bufferGame.currentPlayer = bufferGame.player1;
                 }
