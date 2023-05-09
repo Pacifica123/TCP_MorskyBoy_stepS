@@ -18,7 +18,7 @@ namespace Server
         string GlobalIP;
         int serverPort;
 
-        TcpClient client;
+        static TcpClient client;
         NetworkStream stream;
         TcpListener listener;
 
@@ -26,7 +26,7 @@ namespace Server
         string message;
 
         static List<Game> bufferGames;
-        Dictionary<string, int> IP_ID;
+        static Dictionary<string, int> IP_ID;
 
         public TheNetworkManager(IPAddress serverIP, int serverPort)
         {
@@ -59,27 +59,34 @@ namespace Server
             {
                 TcpClient client = listener.AcceptTcpClient(); 
                 Console.WriteLine("Зафиксирована активность клиента: {0}", client.Client.RemoteEndPoint);
-                if (bufferGames.Count == 0 || bufferGames[bufferGames.Count - 1].IsFilledGame) 
-                    bufferGames.Add(new Game(client.Client.RemoteEndPoint.ToString()))
+                // TODO: идентификация игры по одному игроку
+                /*
+                 * <найти способ как иднтифицировать по игроку в чьей он игре>
+                 * Game thisgame = bufferGames[index_thisGame]
+                 * // (желательно обойтись без циклов)
+                 * 
+                 * */
+                if (bufferGames.Count == 0 || bufferGames[bufferGames.Count - 1].IsFilledGame)
+                    bufferGames.Add(new Game(client.Client.RemoteEndPoint.ToString()));
                 if (bufferGames[bufferGames.Count - 1].player1 == null) 
                 {
                     Console.WriteLine($"Присоединился первый игрок к новой игре: {bufferGames[bufferGames.Count - 1].game_id}");
-                    bufferGame.player1 = new Player();
-                    bufferGame.player1.id = client.Client.RemoteEndPoint; 
-                    bufferGame.currentPlayer = bufferGame.player1;
+                    bufferGames[/*thisgame*/].player1 = new Player();
+                    bufferGames[/*thisgame*/].player1.id = client.Client.RemoteEndPoint;
+                    bufferGames[/*thisgame*/].currentPlayer = bufferGames[/*thisgame*/].player1;
 
                     //установка связи в словаре между айпи и айди 
-                    IP_ID.TryAdd(client.Client.RemoteEndPoint.ToString(), id++) //тут проверить с 0 или с 1
+                    IP_ID.TryAdd(client.Client.RemoteEndPoint.ToString(), id++); //тут проверить с 0 или с 1
                 } 
-                else if (bufferGame.player2 == null && !bufferGame.player1.id.ToString().Contains(client.Client.RemoteEndPoint.ToString().Split(':')[0])) 
+                else if (bufferGames[/*thisgame*/].player2 == null && !bufferGames[/*thisgame*/].player1.id.ToString().Contains(client.Client.RemoteEndPoint.ToString().Split(':')[0])) 
                 {
                     Console.WriteLine($"Присоединился второй игрок к игре: {bufferGames[bufferGames.Count - 1].game_id}");
-                    bufferGame.player2 = new Player();
-                    bufferGame.player2.id = client.Client.RemoteEndPoint;
-                    bufferGame.currentPlayer = bufferGame.player2;
+                    bufferGames[/*thisgame*/].player2.id = client.Client.RemoteEndPoint;
+                    bufferGames[/*thisgame*/].player2 = new Player();
+                    bufferGames[/*thisgame*/].currentPlayer = bufferGames[/*thisgame*/].player2;
                 }
                 // здесь просто выбираем текущего игрока
-                if(bufferGame.player1.id.ToString().Contains(client.Client.RemoteEndPoint.ToString().Split(':')[0]))
+                if(bufferGames[/*thisgame*/].player1.id.ToString().Contains(client.Client.RemoteEndPoint.ToString().Split(':')[0]))
                 {
                     bufferGame.currentPlayer = bufferGame.player1;
                 }
@@ -94,23 +101,23 @@ namespace Server
 
                 //TODO: реализовать очередной ответ на запрос о готовке к игре
 
-                //DeBug     |      |  
-                if (bufferGame.player1 != null && bufferGame.player2 != null)
-                {
-                    if (bufferGame.player1.status && bufferGame.player2.status)
-                    {
+                ////DeBug     |      |  
+                //if (bufferGame.player1 != null && bufferGame.player2 != null)
+                //{
+                //    if (bufferGame.player1.status && bufferGame.player2.status)
+                //    {
                         
-                        bufferGame.GameStarted = true;
-                        game.currentPlayer = game.player1;
-                        //TODO: передать обоим игрокам на Клиент что они оба готовы
-                        TcpClient player1 = new TcpClient(game.player1.id.ToString().Split(':')[0], serverPort);
-                        SendData("your_turn", player1.GetStream());
+                //        bufferGame.GameStarted = true;
+                //        game.currentPlayer = game.player1;
+                //        //TODO: передать обоим игрокам на Клиент что они оба готовы
+                //        TcpClient player1 = new TcpClient(game.player1.id.ToString().Split(':')[0], serverPort);
+                //        SendData("your_turn", player1.GetStream());
 
-                        TcpClient player2 = new TcpClient(game.player2.id.ToString().Split(':')[0], serverPort);
-                        SendData("opponent_turn", player2.GetStream());
-                        client.Close();
-                    }
-                }
+                //        TcpClient player2 = new TcpClient(game.player2.id.ToString().Split(':')[0], serverPort);
+                //        SendData("opponent_turn", player2.GetStream());
+                //        client.Close();
+                //    }
+                //}
             }
         }
 
@@ -173,8 +180,8 @@ namespace Server
             // проблема: это может быть 2й игрок...
             if (message.Contains("ImReady!") && !bufferGames[IP_ID[client.Client.RemoteEndPoint.ToString()]].GameStarted)
                 return "NotYet";
-            if (message.Contains("ImReady!") && bufferGames[IP_ID[client.Client.RemoteEndPoint.ToString()]].GameStarted)
-                return "GameStarted"+;
+            if (message.Contains("ImReady!") && bufferGames[/*thisgame*/].GameStarted)
+                return "GameStarted" + (client.Client.RemoteEndPoint.ToString().Contains(bufferGames[/*thisgame*/].player1.id) ? "your_turn" : "opponent_turn");
             // TODO: обработка запроса о ходе:
 
             return "OK";
