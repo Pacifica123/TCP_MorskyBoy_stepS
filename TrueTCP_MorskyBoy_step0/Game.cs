@@ -9,7 +9,7 @@ namespace Server
 {
     internal class Game
     {
-        public string game_id { get; set; } //для стека игр на сервере
+        public int game_id { get; set; } //для стека игр на сервере
         public Player player1 { get; set; }
         public Player player2 { get; set; }
         public Player currentPlayer { get; set; } //текущий игрок чей ход (для режима атаки)
@@ -18,7 +18,7 @@ namespace Server
         public bool GameOver { get; set; } // флаг конца игры
         public Field buffSea { get; set; } // буфер для поля для передачи игроку затем
 
-        public Game(string id)
+        public Game(int id)
         {
             this.game_id = id; // ip первого подключившегося игрока + его порт
             // старт игры, создание игроков, расстановка кораблей
