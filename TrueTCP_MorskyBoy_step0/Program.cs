@@ -17,10 +17,10 @@ namespace Server
             //Создаем прослушиватель Сервера
             // сокет для конкретного Клиента
             // Засовываем все это в ООП...
-            game = new Game();
-            gameManager = new GameManager();
-            player1 = new Player(); player2 = new Player();
-            WebClient webServer = new WebClient();
+            //game = new Game();
+            //gameManager = new GameManager();
+            //player1 = new Player(); player2 = new Player();
+            //WebClient webServer = new WebClient();
         //    webServer.DownloadString("https://api.ipify.org");
             
             TheNetworkManager networkManager = new TheNetworkManager(Dns.GetHostByName(Dns.GetHostName()).AddressList[0], 8888);

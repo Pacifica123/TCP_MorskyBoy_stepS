@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
-using System.Text.Json;
+//using System.Text.Json;
 using System.Xml.XPath;
 using System.IO;
 using System.Net;
@@ -111,7 +111,7 @@ namespace Client.forms
                 if(!response.Contains("OK")) resetAllShips();
                 //если все хорошо, то сервер вернет "OK"
 
-                if(!response == "OK")
+                if(!(response == "OK"))
                 {
                     message = Encoding.UTF8.GetBytes("ImReady");
                     stream = client.GetStream();
@@ -128,7 +128,7 @@ namespace Client.forms
                     if (response.Contains("GameStarted"))
                     {
                         MessageBox.Show("Вы начали игру с противником!");
-                        GameTransformation()
+                        GameTransformation(response);
                     }
                 }
 
