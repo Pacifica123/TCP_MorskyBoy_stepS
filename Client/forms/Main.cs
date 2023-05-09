@@ -92,7 +92,7 @@ namespace Client.forms
 
             MessageBox.Show("Корабли отправляются в плавание на сервер!");
 
-            //ПОПЫТКА 3
+            // Конвертация сета кораблей на сервер  (ПОПЫТКА 3)
             string json = JsonConvert.SerializeObject(shipSET);
             byte[] message;
             
@@ -108,10 +108,33 @@ namespace Client.forms
                 byte[] responseBytes = new byte[1024];
                 int bytesRead = stream.Read(responseBytes, 0, responseBytes.Length);
                 string response = Encoding.ASCII.GetString(responseBytes, 0, bytesRead);
-                //TODO: if(response == "error") resetShip();
                 if(!response.Contains("OK")) resetAllShips();
                 //если все хорошо, то сервер вернет "OK"
-                MessageBox.Show(response + "\nПодождите второго игрока...");
+
+                if(!response == "OK")
+                {
+                    message = Encoding.UTF8.GetBytes("ImReady");
+                    stream = client.GetStream();
+                    stream.Write(message, 0, message.Length);
+                    responseBytes = new byte[1024];
+                    bytesRead = stream.Read(responseBytes, 0, responseBytes.Length);
+                    response = Encoding.UTF8.GetString(responseBytes, 0, bytesRead);
+                    //
+                    if (response.Contains("NotYet"))
+                    {
+                        MessageBox.Show(response + "\nПодождите второго игрока и нажмите ещё раз...");
+                        return;
+                    }
+                    if (response.Contains("GameStarted"))
+                    {
+                        MessageBox.Show("Вы начали игру с противником!");
+                        GameTransformation()
+                    }
+                }
+
+                
+
+
 
                 //Ждем второго
                 // client.Close();
@@ -120,15 +143,8 @@ namespace Client.forms
                 //listener.Start();
                 // TcpClient serverSwitchMod = listener.AcceptTcpClient();
                // TcpClient serverSwitchMod = client.Client.L
-                if (client != null && client.Client.RemoteEndPoint.ToString().Contains(ipServer))
-                {
-                    // TODO: чтение сообщения и преобразование Клиента
-                    byte[] responseBytesServer = new byte[1024];
-                    int bytesCount = client.GetStream().Read(responseBytesServer, 0, responseBytesServer.Length);
-                    // на выходе от Сервака получаем чья сейчас очередь - этого клиента или противника
-                    string whoseMove = Encoding.ASCII.GetString(responseBytesServer, 0, bytesCount);
-                    GameTransformation(whoseMove);
-                }
+                
+
             }
             catch (SocketException ex)
             {

@@ -9,14 +9,18 @@ namespace Server
 {
     internal class Game
     {
-        public Player player1, player2;
-        public Player currentPlayer; //текущий игрок чей ход (для режима атаки)
-        public bool GameStarted; // флаг начала игры (активируется по завершению расстановки у каждого из игроков)
-        public bool GameOver; // флаг конца игры
-        public Field buffSea; // буфер для поля для передачи игроку затем
+        public string game_id { get; set; } //для стека игр на сервере
+        public Player player1 { get; set; }
+        public Player player2 { get; set; }
+        public Player currentPlayer { get; set; } //текущий игрок чей ход (для режима атаки)
+        public bool IsFilledGame { get; set; } //оба игрока подключились к текущей игре и нужно создать новую
+        public bool GameStarted { get; set; } // флаг начала игры (активируется по завершению расстановки у каждого из игроков)
+        public bool GameOver { get; set; } // флаг конца игры
+        public Field buffSea { get; set; } // буфер для поля для передачи игроку затем
 
-        public Game()
+        public Game(string id)
         {
+            this.game_id = id; // ip первого подключившегося игрока + его порт
             // старт игры, создание игроков, расстановка кораблей
             //расстановка кораблей происходит сразу же, получая массив с клиента
             //если расстановка неверная, сервер посылает клиента переделать расстановку (обновить массив)

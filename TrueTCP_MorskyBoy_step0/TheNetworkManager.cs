@@ -25,7 +25,8 @@ namespace Server
         static byte[] buffer;
         string message;
 
-        static Game bufferGame;
+        static List<Game> bufferGames;
+        Dictionary<string, int> IP_ID;
 
         public TheNetworkManager(IPAddress serverIP, int serverPort)
         {
@@ -42,33 +43,42 @@ namespace Server
         }
         public void DisconnectToServer() 
         {
-            
+            listener.Stop();
+            bufferGames.Clear();
         }
         public void Start(Game game, GameManager gmForProcessGame)
         {
             listener.Start();
-            bufferGame = game;
+            bufferGames = new List<Game>();
+            IP_ID = new Dictionary<string, int>();
+            int id = 0;
             Console.WriteLine("Сервер получил старт на порту 8888");
+
             //Начинаем бесконечное прослушивание
             while (true)
             {
                 TcpClient client = listener.AcceptTcpClient(); 
                 Console.WriteLine("Зафиксирована активность клиента: {0}", client.Client.RemoteEndPoint);
-                if (bufferGame.player1 == null) 
+                if (bufferGames.Count == 0 || bufferGames[bufferGames.Count - 1].IsFilledGame) 
+                    bufferGames.Add(new Game(client.Client.RemoteEndPoint.ToString()))
+                if (bufferGames[bufferGames.Count - 1].player1 == null) 
                 {
-                    Console.WriteLine("Присоединился первый игрок");
+                    Console.WriteLine($"Присоединился первый игрок к новой игре: {bufferGames[bufferGames.Count - 1].game_id}");
                     bufferGame.player1 = new Player();
                     bufferGame.player1.id = client.Client.RemoteEndPoint; 
                     bufferGame.currentPlayer = bufferGame.player1;
+
+                    //установка связи в словаре между айпи и айди 
+                    IP_ID.TryAdd(client.Client.RemoteEndPoint.ToString(), id++) //тут проверить с 0 или с 1
                 } 
                 else if (bufferGame.player2 == null && !bufferGame.player1.id.ToString().Contains(client.Client.RemoteEndPoint.ToString().Split(':')[0])) 
                 {
-                    Console.WriteLine("Присоединился второй игрок");
+                    Console.WriteLine($"Присоединился второй игрок к игре: {bufferGames[bufferGames.Count - 1].game_id}");
                     bufferGame.player2 = new Player();
                     bufferGame.player2.id = client.Client.RemoteEndPoint;
                     bufferGame.currentPlayer = bufferGame.player2;
                 }
-                
+                // здесь просто выбираем текущего игрока
                 if(bufferGame.player1.id.ToString().Contains(client.Client.RemoteEndPoint.ToString().Split(':')[0]))
                 {
                     bufferGame.currentPlayer = bufferGame.player1;
@@ -82,7 +92,7 @@ namespace Server
 
                 HandleClient(client, gmForProcessGame);
 
-                //TODO: if(Game.Started) {отправить player1 и player2 сообщение о начале игры}
+                //TODO: реализовать очередной ответ на запрос о готовке к игре
 
                 //DeBug     |      |  
                 if (bufferGame.player1 != null && bufferGame.player2 != null)
@@ -159,7 +169,13 @@ namespace Server
             if (message == "good") return "conected"; //проверка работы сервера
             // Массив кораблей для расстановки:
             if (message.Contains("rasst")) return GameManager.Rasstanovka(message.Replace("rasst", ""), bufferGame);
-
+            // Переодическая проверка клиентом сервера по нажатию кнопки "Я готов!"
+            // проблема: это может быть 2й игрок...
+            if (message.Contains("ImReady!") && !bufferGames[IP_ID[client.Client.RemoteEndPoint.ToString()]].GameStarted)
+                return "NotYet";
+            if (message.Contains("ImReady!") && bufferGames[IP_ID[client.Client.RemoteEndPoint.ToString()]].GameStarted)
+                return "GameStarted"+;
+            // TODO: обработка запроса о ходе:
 
             return "OK";
         }
