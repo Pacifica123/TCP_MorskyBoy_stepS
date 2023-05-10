@@ -30,20 +30,15 @@ namespace Client.forms
         public Main()
         {
             InitializeComponent();
-            InitCast();
+            InitCast(dgvYourSea);
             selectedCellsCoordlist = new List<Point>();
             shipSET = new List<Ship>();
         }
-        private void InitCast()
+        private void InitCast(DataGridView dgv)
         {
-            dgvYourSea.RowCount = 10;
-            dgvYourSea.ColumnCount = 10;
-            normalizeSea();
-        }
-        private void normalizeSea()
-        {
-            int totalHieght = 0;
-            dgvYourSea.ScrollBars = ScrollBars.None;
+            dgv.RowCount = 10;
+            dgv.ColumnCount = 10;
+            dgv.ScrollBars = ScrollBars.None;
         }
         // получаем клиента и поток с формы подключения
         public void RecieveParameters(TcpClient client, NetworkStream stream, string ipServer)
@@ -131,20 +126,6 @@ namespace Client.forms
                         GameTransformation(response);
                     }
                 }
-
-                
-
-
-
-                //Ждем второго
-                // client.Close();
-                // TcpListener listener = new TcpListener(8888);
-               // client.Client.Listen(8888);
-                //listener.Start();
-                // TcpClient serverSwitchMod = listener.AcceptTcpClient();
-               // TcpClient serverSwitchMod = client.Client.L
-                
-
             }
             catch (SocketException ex)
             {
@@ -171,12 +152,25 @@ namespace Client.forms
                 selectedCellsCoordlist.Remove(p);
             }
         }
+
+        private bool CheckSquare()
+        {
+            bool IsSquare = false;
+            return IsSquare;
+        }
+
         /// <summary>
         /// ДАБАВИТЬ ВЫДЕЛЕННЫЙ КОРАБЛЬ В СЕТ
         /// </summary>
         private bool EnterShip()
         {
             // TODO: обработать ситуацию "4ка-квадрат"
+            if (selectedCellsCoordlist.Count == 4 && CheckSquare())
+            {
+                resetShip();
+                MessageBox.Show("Невозможный корабль!");
+                return false;
+            }
 
             Ship ship = new Ship(0, new List<SeaCell>(), Ship.vectoring.horizontal);
             foreach (Point p in selectedCellsCoordlist)
@@ -443,9 +437,15 @@ namespace Client.forms
         /// </summary>
         private void GameTransformation(string whoseTurn)
         {
-            if (whoseTurn.Contains("you")) { MessageBox.Show("Ваш ход."); return; }
-            else if (whoseTurn == "" || whoseTurn == null || !whoseTurn.Contains("opponent"))
+            if (whoseTurn == "" || whoseTurn == null || !whoseTurn.Contains("opponent"))
             { MessageBox.Show("Второй игрок ещё не расставил или не подключился. Нажмите эту кнопку позже."); return; }
+            
+            InitCast(dgvOpponentSea);
+            if (whoseTurn.Contains("you")) 
+            {
+                MessageBox.Show("Ваш ход."); 
+                return; 
+            } 
             else MessageBox.Show("Сейчас ход противника.");
         }
     }

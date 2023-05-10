@@ -78,6 +78,7 @@ namespace Server
                 // если игра совершенно пустая - добавляем первого игрока как текущего игрока
                 if (bufferGames[bufferGames.Count - 1].player1 == null) 
                 {
+                    thisGame = bufferGames[bufferGames.Count - 1];
                     Console.WriteLine($"Присоединился первый игрок к новой игре: {bufferGames[bufferGames.Count - 1].game_id}");
                     thisGame.player1 = new Player();
                     thisGame.player1.id = client.Client.RemoteEndPoint;
@@ -85,8 +86,9 @@ namespace Server
                     thisGame.currentPlayer = thisGame.player1;
                 } 
                 // если клиент отличается от первого игрока, а второе свободно - занимаем его
-                else if (thisGame.player2 == null && !thisGame.player1.id.ToString().Contains(client.Client.RemoteEndPoint.ToString().Split(':')[0])) 
+                else if (bufferGames[bufferGames.Count - 1].player2 == null && !bufferGames[bufferGames.Count - 1].player1.id.ToString().Contains(client.Client.RemoteEndPoint.ToString().Split(':')[0])) 
                 {
+                    thisGame = bufferGames[bufferGames.Count - 1];
                     Console.WriteLine($"Присоединился второй игрок к игре: {thisGame.game_id}");
                     
                     thisGame.player2 = new Player();

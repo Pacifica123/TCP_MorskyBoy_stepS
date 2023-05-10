@@ -31,7 +31,7 @@
             this.dgvYourSea = new System.Windows.Forms.DataGridView();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.dgvOpponentSea = new System.Windows.Forms.DataGridView();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.butStart = new System.Windows.Forms.Button();
@@ -39,7 +39,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.dgvYourSea)).BeginInit();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvOpponentSea)).BeginInit();
             this.SuspendLayout();
             // 
             // dgvYourSea
@@ -74,33 +74,33 @@
             // 
             // panel2
             // 
-            this.panel2.Controls.Add(this.dataGridView1);
+            this.panel2.Controls.Add(this.dgvOpponentSea);
             this.panel2.Location = new System.Drawing.Point(510, 48);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(258, 259);
             this.panel2.TabIndex = 2;
             // 
-            // dataGridView1
+            // dgvOpponentSea
             // 
-            this.dataGridView1.AllowUserToAddRows = false;
-            this.dataGridView1.AllowUserToDeleteRows = false;
-            this.dataGridView1.AllowUserToResizeColumns = false;
-            this.dataGridView1.AllowUserToResizeRows = false;
-            this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.dgvOpponentSea.AllowUserToAddRows = false;
+            this.dgvOpponentSea.AllowUserToDeleteRows = false;
+            this.dgvOpponentSea.AllowUserToResizeColumns = false;
+            this.dgvOpponentSea.AllowUserToResizeRows = false;
+            this.dgvOpponentSea.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dataGridView1.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.ColumnHeadersVisible = false;
-            this.dataGridView1.Enabled = false;
-            this.dataGridView1.Location = new System.Drawing.Point(3, 3);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.RowHeadersVisible = false;
-            this.dataGridView1.RowHeadersWidth = 20;
-            this.dataGridView1.RowTemplate.Height = 25;
-            this.dataGridView1.Size = new System.Drawing.Size(252, 253);
-            this.dataGridView1.TabIndex = 0;
+            this.dgvOpponentSea.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dgvOpponentSea.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvOpponentSea.ColumnHeadersVisible = false;
+            this.dgvOpponentSea.Enabled = false;
+            this.dgvOpponentSea.Location = new System.Drawing.Point(3, 3);
+            this.dgvOpponentSea.Name = "dgvOpponentSea";
+            this.dgvOpponentSea.ReadOnly = true;
+            this.dgvOpponentSea.RowHeadersVisible = false;
+            this.dgvOpponentSea.RowHeadersWidth = 20;
+            this.dgvOpponentSea.RowTemplate.Height = 25;
+            this.dgvOpponentSea.Size = new System.Drawing.Size(252, 253);
+            this.dgvOpponentSea.TabIndex = 0;
             // 
             // label1
             // 
@@ -155,7 +155,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.dgvYourSea)).EndInit();
             this.panel1.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvOpponentSea)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -166,7 +166,7 @@
         private System.Windows.Forms.DataGridView dgvYourSea;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
-        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.DataGridView dgvOpponentSea;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button butStart;
