@@ -152,7 +152,7 @@ namespace Client.forms
                 selectedCellsCoordlist.Remove(p);
             }
         }
-
+        // TODO: реализовать проверку на квадрат
         private bool CheckSquare()
         {
             bool IsSquare = false;
