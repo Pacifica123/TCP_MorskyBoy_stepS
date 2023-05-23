@@ -108,7 +108,7 @@ namespace Client.forms
 
                 if(!(response == "OK"))
                 {
-                    message = Encoding.UTF8.GetBytes("ImReady");
+                    message = Encoding.UTF8.GetBytes("ImReady!");
                     stream = client.GetStream();
                     stream.Write(message, 0, message.Length);
                     responseBytes = new byte[1024];
