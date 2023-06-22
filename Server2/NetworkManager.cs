@@ -14,6 +14,7 @@ namespace Server2
     public class NetworkManager
     {
         private List<Game> games;
+        private int GAME_ID_COUNTER = 0;
 
         public NetworkManager()
         {
@@ -44,7 +45,7 @@ namespace Server2
                 if (games.Count == 0)
                 {
                     // Если список игр пустой, создаем новую игру и добавляем клиента в нее
-                    Game newGame = new Game();
+                    Game newGame = new Game(GAME_ID_COUNTER++);
                     games.Add(newGame);
                     AddPlayerToGame(client, newGame);
                 }
@@ -67,7 +68,7 @@ namespace Server2
                     if (!clientAdded)
                     {
                         // Если все игры заполнены, создаем новую игру и добавляем клиента в нее
-                        Game newGame = new Game();
+                        Game newGame = new Game(GAME_ID_COUNTER++);
                         games.Add(newGame);
                         AddPlayerToGame(client, newGame);
                     }

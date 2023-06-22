@@ -16,9 +16,10 @@ namespace Server2.Engine
         public bool GameStarted { get; set; }
         public bool GameOver { get; set; }
 
-        public Game()
+        public Game(int id)
         {
             Players = new List<Player>();
+            GameId = id;
         }
 
         public void ChangePlayer()
