@@ -18,6 +18,7 @@ namespace Server2.Engine
             this.Type = type;
             ShipCells = new List<SeaCell>();
             IsDestructed = false;
+            Health = type;
         }
         public void Damage()
         {

@@ -7,19 +7,21 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
+using Newtonsoft.Json;
 
 namespace Server2
 {
     public class NetworkManager
     {
         private List<Game> games;
-        private List<Player> waitingPlayers;
 
         public NetworkManager()
         {
             games = new List<Game>();
-            waitingPlayers = new List<Player>();
         }
+        /// <summary>
+        /// Весь общий процесс работы сервера
+        /// </summary>
         public void Start()
         {
             TcpListener listener = new TcpListener(IPAddress.Any, 8888);
@@ -30,6 +32,13 @@ namespace Server2
             {
                 // Принимаем нового клиента или запрос
                 TcpClient client = listener.AcceptTcpClient();
+                // Проверяем, является ли клиент уже участником какой-либо игры
+                if (IsClientAlreadyInGame(client))
+                {
+                    // Если клиент уже числится в игре, игнорируем его подключение
+                    Console.WriteLine("Клиент уже участвует в игре. Подключение игнорируется.");
+                    continue;
+                }
                 // Проверяем все возможные случаи подключения нового клиента
                 if (games.Count == 0)
                 {
@@ -63,18 +72,23 @@ namespace Server2
                     }
                 }
                 Task.Run(() => ProcessClient(client));
+                
             }
         }
+        /// <summary>
+        /// Главный механизм обработки запросов клиентов и ответа на них
+        /// </summary>
+        /// <param name="client"></param>
         private void ProcessClient(TcpClient client)
         {
             NetworkStream stream = client.GetStream();
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[2048];
             int bytesRead;
 
-            while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
+            while (client.Connected && (bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
             {
                 string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                string response = ProcessMessage(message);
+                string response = ProcessMessage(message, client);
 
                 byte[] responseBytes = Encoding.UTF8.GetBytes(response);
                 stream.Write(responseBytes, 0, responseBytes.Length);
@@ -82,17 +96,136 @@ namespace Server2
 
             client.Close();
         }
-        private string ProcessMessage(string message)
+        /// <summary>
+        /// ядро механизма обработки запросов клиентов
+        /// </summary>
+        /// <param name="message">полученное сообщение</param>
+        /// <param name="client"></param>
+        /// <returns></returns>
+        private string ProcessMessage(string message, TcpClient client)
         {
             // Обработка полученного сообщения и возвращение ответа
             switch (message)
             {
                 case "test":
                     return "Good!";
-
+                case var placementMessage when placementMessage.StartsWith("placement:"):
+                    return placementShips(placementMessage.Substring("placement:".Length), client);
+                case "YouReady?":
+                    string id = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+                    return CheckSecondPlayer(FindPlayerById(id));
                 default:
                     return "Default";
             }
+        }
+        /// <summary>
+        /// Расстановка кораблей для игрока
+        /// </summary>
+        /// <param name="placementJSON">сериализованная строка - список кораблей</param>
+        /// <param name="client"></param>
+        /// <returns>тоже что и CheckSecondPlayer</returns>
+        private string placementShips(string placementJSON, TcpClient client)
+        {
+            
+            Console.WriteLine(new string('-', 10));
+            Console.WriteLine("Десериализация следующей расстановки:");
+            Console.WriteLine(placementJSON);
+            Console.WriteLine(new string('-', 10));
+
+            // Десериализация списка кораблей
+            List<Ship> ships = JsonConvert.DeserializeObject<List<Ship>>(placementJSON);
+            // Поиск соответствующего клиента по идентификатору игрока
+            Player player = FindPlayerById(((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString());
+
+            // Если клиент найден, присваиваем корабли игроку
+            if (player != null)
+            {
+                
+                player.PlayerSea.Ships = ships;
+
+                // Обновление списка клеток SeaCells в связи с новыми кораблями
+                List<SeaCell> seaCells = player.PlayerSea.UpdateSeaCells(ships);
+                player.PlayerSea.SeaCells = seaCells;
+
+                player.Status = true;
+
+                Console.WriteLine(new string('-', 10));
+                Console.WriteLine($"Текущая расстановка у игрока {player.PlayerId} игры {player.GameId}");
+                player.PlayerSea.PrintSeaMap();
+                Console.WriteLine(new string('-', 10));
+
+                return CheckSecondPlayer(player);
+            }
+            else
+            {
+                return "Player not found";
+            }
+        }
+        /// <summary>
+        /// Проверка на второго игрока и его гоовность для первого
+        /// </summary>
+        /// <param name="player"></param>
+        /// <returns>результат проверки как ответ сервера клиенту</returns>
+        private string CheckSecondPlayer(Player player)
+        {
+            Game game = FindGameById(player.GameId);
+
+            if (game == null)
+            {
+                return "GameNotFound";
+            }
+
+            Player secondPlayer = game.Players.FirstOrDefault(p => p != player);
+
+            if (secondPlayer == null)
+            {
+                return "DontSecond";
+            }
+
+            if (!player.Status || !secondPlayer.Status)
+            {
+                return "NotReady";
+            }
+
+            game.GameStarted = true;
+
+            return "GameStarted";
+        }
+        private Player FindPlayerById(string playerId)
+        {
+            foreach (var game in games)
+            {
+                foreach (var player in game.Players)
+                {
+                    if (player.PlayerId == playerId)
+                    {
+                        return player;
+                    }
+                }
+            }
+
+            return null; // Игрок с указанным идентификатором не найден
+        }
+        private Game FindGameById(int gameId)
+        {
+            return games.FirstOrDefault(g => g.GameId == gameId);
+        }
+        private bool IsClientAlreadyInGame(TcpClient client)
+        {
+            string clientId = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+
+            foreach (Game game in games)
+            {
+                foreach (Player player in game.Players)
+                {
+                    if (player.PlayerId == clientId)
+                    {
+                        return true; // Клиент уже числится в игре
+                    }
+                }
+            }
+
+            return false; // Клиент не числится в игре
         }
         private void AddPlayerToGame(TcpClient client, Game game)
         {
@@ -105,11 +238,10 @@ namespace Server2
         }
         private string GeneratePlayerId(TcpClient client)
         {
-            // Генерация нового GUID
-            Guid playerIdGuid = Guid.NewGuid();
-            string playerId = playerIdGuid.ToString();
+            // Получение IP-адреса клиента
+            string ipAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
 
-            return playerId;
+            return ipAddress;
         }
     }
 }

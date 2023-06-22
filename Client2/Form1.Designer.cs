@@ -36,6 +36,7 @@
             this.rbHorisontal = new System.Windows.Forms.RadioButton();
             this.rbVertical = new System.Windows.Forms.RadioButton();
             this.btnDisconnect = new System.Windows.Forms.Button();
+            this.btnSend = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.YourSea)).BeginInit();
             this.SuspendLayout();
             // 
@@ -58,11 +59,18 @@
             // 
             // YourSea
             // 
+            this.YourSea.AllowUserToAddRows = false;
+            this.YourSea.AllowUserToDeleteRows = false;
+            this.YourSea.AllowUserToResizeColumns = false;
+            this.YourSea.AllowUserToResizeRows = false;
             this.YourSea.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.YourSea.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
             this.YourSea.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.YourSea.ColumnHeadersVisible = false;
             this.YourSea.Location = new System.Drawing.Point(135, 77);
             this.YourSea.Name = "YourSea";
+            this.YourSea.ReadOnly = true;
+            this.YourSea.RowHeadersVisible = false;
+            this.YourSea.ScrollBars = System.Windows.Forms.ScrollBars.None;
             this.YourSea.Size = new System.Drawing.Size(250, 250);
             this.YourSea.TabIndex = 2;
             this.YourSea.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.YourSea_CellMouseClick);
@@ -119,11 +127,22 @@
             this.btnDisconnect.UseVisualStyleBackColor = true;
             this.btnDisconnect.Click += new System.EventHandler(this.btnDisconnect_Click);
             // 
+            // btnSend
+            // 
+            this.btnSend.Location = new System.Drawing.Point(135, 353);
+            this.btnSend.Name = "btnSend";
+            this.btnSend.Size = new System.Drawing.Size(127, 58);
+            this.btnSend.TabIndex = 8;
+            this.btnSend.Text = "ОТПРАВИТЬ";
+            this.btnSend.UseVisualStyleBackColor = true;
+            this.btnSend.Click += new System.EventHandler(this.btnSend_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.btnSend);
             this.Controls.Add(this.btnDisconnect);
             this.Controls.Add(this.rbVertical);
             this.Controls.Add(this.rbHorisontal);
@@ -151,6 +170,7 @@
         private System.Windows.Forms.RadioButton rbHorisontal;
         private System.Windows.Forms.RadioButton rbVertical;
         private System.Windows.Forms.Button btnDisconnect;
+        private System.Windows.Forms.Button btnSend;
     }
 }
 
