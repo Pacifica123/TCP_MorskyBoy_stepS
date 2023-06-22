@@ -106,7 +106,7 @@ namespace Client.forms
                 if(!response.Contains("OK")) resetAllShips();
                 //если все хорошо, то сервер вернет "OK"
 
-                if(!(response == "OK"))
+                if(response == "OK")
                 {
                     message = Encoding.UTF8.GetBytes("ImReady!");
                     stream = client.GetStream();
@@ -164,7 +164,6 @@ namespace Client.forms
         /// </summary>
         private bool EnterShip()
         {
-            // TODO: обработать ситуацию "4ка-квадрат"
             if (selectedCellsCoordlist.Count == 4 && CheckSquare())
             {
                 resetShip();

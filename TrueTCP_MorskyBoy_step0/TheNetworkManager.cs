@@ -19,7 +19,7 @@ namespace Server
         IPAddress serverIP;
         int serverPort;
 
-        static TcpClient client;
+        //static  client;
         NetworkStream stream;
         TcpListener listener;
 
@@ -51,7 +51,7 @@ namespace Server
         {
             return bufferGames.FirstOrDefault(g => g.player1.id.ToString().Contains(IP) || (g.player2 != null && g.player2.id.ToString().Contains(IP)));
         }
-        public void Start(Game game, GameManager gmForProcessGame)
+        public void Start(GameManager gmForProcessGame)
         {
             listener.Start();
             bufferGames = new List<Game>();
@@ -62,7 +62,7 @@ namespace Server
             //Начинаем бесконечное прослушивание
             while (true)
             {
-                client = listener.AcceptTcpClient(); 
+                TcpClient client = listener.AcceptTcpClient(); 
                 Console.WriteLine("Зафиксирована активность клиента: {0}", client.Client.RemoteEndPoint);
                 // поиск возможной игры в которой игрок уже есть (вычисляем по IP, лол)
                 Game? thisGame = SearchThisGame(client.Client.RemoteEndPoint.ToString().Split(':')[0]);
@@ -161,7 +161,7 @@ namespace Server
         /// </summary>
         /// <param name="message"></param>
         /// <returns>Возвращает ОК по дефолту. Ответ сервера если предусмотрен.</returns>
-        private static string ProcessMessage(string message)
+        private static string ProcessMessage(string message, TcpClient client)
         {
             Game currentGame = SearchThisGame(client.Client.RemoteEndPoint.ToString().Split(':')[0]);
             if (message == "good") return "conected"; //проверка работы сервера
@@ -185,9 +185,10 @@ namespace Server
         {
             NetworkStream stream = client.GetStream(); 
             ReceiveData(stream); //заносит в message запрос от Клиента
-            SendData(ProcessMessage(message), stream); //Сервер отвечает используя message уже как буфер
+            SendData(ProcessMessage(message, client), stream); //Сервер отвечает используя message уже как буфер
 
             // не забываем закрывать клиента по обработке запроса
+            stream.Close();
             client.Close();
 
         }

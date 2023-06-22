@@ -9,14 +9,21 @@ namespace Server
     internal class Program
     {
         public static Player player1, player2;
-        public static Game game;
         public static GameManager gameManager;
         static void Main(string[] args)
         {
-            Console.WriteLine("Сервер включается...");
-            
-            TheNetworkManager networkManager = new TheNetworkManager(Dns.GetHostByName(Dns.GetHostName()).AddressList[0], 8888);
-            networkManager.Start(game, gameManager);
+            try
+            {
+                Console.WriteLine("Сервер включается...");
+
+                TheNetworkManager networkManager = new TheNetworkManager(Dns.GetHostByName(Dns.GetHostName()).AddressList[0], 8888);
+                networkManager.Start(gameManager);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Произошла ошибка: " + ex.Message);
+                // Дополнительная обработка исключения, если необходимо
+            }
         }
 
         // РЕАЛИЗАЦИЯ ЛОГИКИ ИГРЫ
