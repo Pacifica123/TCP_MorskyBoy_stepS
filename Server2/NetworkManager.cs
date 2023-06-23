@@ -107,6 +107,7 @@ namespace Server2
         private string ProcessMessage(string message, TcpClient client)
         {
             // Обработка полученного сообщения и возвращение ответа
+            string id = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
             switch (message)
             {
                 case "test":
@@ -114,12 +115,31 @@ namespace Server2
                 case var placementMessage when placementMessage.StartsWith("placement:"):
                     return placementShips(placementMessage.Substring("placement:".Length), client);
                 case "YouReady?":
-                    string id = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
                     return CheckSecondPlayer(FindPlayerById(id));
+                case var attackMessage when attackMessage.StartsWith("attack:"):
+                    string coordinates = attackMessage.Substring("attack:".Length);
+                    return ProcessAttack(coordinates, client);
+                case "OpponentAlreadyAtacked?":
+                    Player thisPlayer = FindPlayerById(id);
+                    return ProcessAttackForOpponent(FindGameById(thisPlayer.GameId));
                 default:
                     return "Default";
             }
         }
+        /// <summary>
+        /// Ответ на каждый 10-секундый вопрос клиента о том сходил ли оппонент
+        /// </summary>
+        /// <returns>информацию о том, попал ли оппонент и куда в формате "opponent_*,X,Y"</returns>
+        /// <exception cref="NotImplementedException"></exception>
+        private string ProcessAttackForOpponent(Game game)
+        {
+            string answer = "OpponentAttackResult:";
+            answer += game.LastTurn.Value.resultForNextPlayer; //tokens[0]
+            answer += "," + game.LastTurn.Value.X.ToString(); //tokens[1]
+            answer += "," + game.LastTurn.Value.Y.ToString(); //tokens[2]
+            return answer;
+        }
+
         /// <summary>
         /// Расстановка кораблей для игрока
         /// </summary>
@@ -190,6 +210,7 @@ namespace Server2
             }
 
             game.GameStarted = true;
+            game.CurrentPlayer = game.Players[0];
 
             return "GameStarted";
         }
@@ -245,5 +266,33 @@ namespace Server2
 
             return ipAddress;
         }
+        private string ProcessAttack(string coordinates, TcpClient client)
+        {
+            string id = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+            Player thisPlayer = FindPlayerById(id);
+            Game thisGame = FindGameById(thisPlayer.GameId);
+            // Проверка правила чередования хода
+            if (thisGame.CurrentPlayer != FindPlayerById(id)) 
+            {
+                return "NotYourTurn"; // Возвращаем сообщение, что сейчас не ваш ход
+            }
+
+            // Обработка атаки на сервер
+            bool isHit = thisGame.CheckAttack(coordinates); // Проверяем атаку на попадание
+            if (isHit)
+            {
+                thisGame.CurrentPlayer = thisPlayer; // Ход остается у текущего клиента
+                return "you_shot";
+            }
+            else
+            {
+                // Ход передается оппоненту
+                thisGame.ChangePlayer();
+
+                return "you_fail";
+            }
+        }
+
+
     }
 }

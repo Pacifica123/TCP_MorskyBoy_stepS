@@ -34,20 +34,15 @@ namespace Client2
             shipBuffer.Add(new Ship(1));
             shipBuffer.Add(new Ship(1));
             currentShip = shipBuffer.Last();
-            gameStartTimer = new Timer();
-            gameStartTimer.Interval = 10000; // Интервал повторного запроса в миллисекундах (10 секунд)
-            gameStartTimer.Tick += GameStartTimer_Tick;
         }
 
         // Глобальные переменные
-        private int currentShipSize; // Размер текущего корабля
-        private int shipCounter; // Счетчик установленных кораблей
-        private bool isPlacingShip; // Флаг режима расстановки корабля
+        private bool isGameStarted = false;
+        private bool isUserFieldEditable = true;
         private Ship currentShip; // Текущий корабль
         static string ipServer; // Конечная точка подключения
         List<Ship> Ships_buffer = new List<Ship>(); // Буферный список для отправки кораблей на сервер
         private List<Ship> shipBuffer;  // Буферный список кораблей для размещения на поле
-        private Timer gameStartTimer; // Таймер для повторного запроса при ожидании начала игры
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -143,8 +138,10 @@ namespace Client2
         {
             // Задержка в 5 секунд
             await Task.Delay(5000);
-            // Отправка запроса на сервер
-            SendMessageToServer("YouReady?");
+            // Отправка запроса на сервер в зависимости от состояния игры
+            if (!isGameStarted)
+                SendMessageToServer("YouReady?");
+            else SendMessageToServer("OpponentAlreadyAtacked?"); // получить ответ о том, как сходил противник
         }
 
         private string ReceiveMessageFromServer(NetworkStream stream)
@@ -193,6 +190,18 @@ namespace Client2
                 case "GameStarted":
                     ClientGameTransformation();
                     break;
+                case string result when result.StartsWith("AttackResult"):
+                    ProcessAttackResult(result);
+                    break;
+                case string result when result.StartsWith("OpponentAttackResult"):
+                    ProcessOpponentAttackResult(result);
+                    break;
+                case "NotAlready":
+                    // снова ждем но уже когда сходит пртивник
+                    ToolTip waiting = new ToolTip();
+                    waiting.Show("Ждем ответа оппонента...", OpponentSea);
+                    WaitForServerResponse();
+                    break;
                 default:
                     // Обработка неизвестного ответа
                     MessageBox.Show("Что-то пошло не так!");
@@ -204,6 +213,7 @@ namespace Client2
 
 
         #region ВНЕШКА
+        //--------------------------------------------------
         // КЛИКИ
         //--------------------------------------------------
         private void btnDisconnect_Click(object sender, EventArgs e)
@@ -261,26 +271,35 @@ namespace Client2
 
             if (currentShip != null)
             {
-                // Добавить текущий корабль в буфер и удалить его из списка кораблей
-                Ships_buffer.Add(currentShip);
-                shipBuffer.Remove(currentShip);
-                //currentShip = null;
-
-                // Окрасить ячейки корабля в другой цвет
-                foreach (SeaCell cell in currentShip.ShipCells)
+                if (!IsShipColliding(currentShip))
                 {
-                    YourSea.Rows[cell.Y].Cells[cell.X].Style.BackColor = Color.Gray;
+                
+                    // Добавить текущий корабль в буфер и удалить его из списка кораблей
+                    Ships_buffer.Add(currentShip);
+                    shipBuffer.Remove(currentShip);
+                    //currentShip = null;
+
+                    // Окрасить ячейки корабля в другой цвет
+                    foreach (SeaCell cell in currentShip.ShipCells)
+                    {
+                        YourSea.Rows[cell.Y].Cells[cell.X].Style.BackColor = Color.Gray;
+                    }
+
+                    // Обновить доступность кнопок
+                    UpdateButtonStates();
+
+                    // Очистить выделение ячейки
+                    YourSea.ClearSelection();
+
+                    // Следующий корабль
+                    if (shipBuffer.Count > 0)
+                        currentShip = shipBuffer.Last();
+               
                 }
-
-                // Обновить доступность кнопок
-                UpdateButtonStates();
-
-                // Очистить выделение ячейки
-                YourSea.ClearSelection();
-
-                // Следующий корабль
-                if (shipBuffer.Count > 0)
-                    currentShip = shipBuffer.Last();
+                else
+                {
+                    MessageBox.Show("Корабль не может касаться других кораблей!");
+                }
             }
         }
 
@@ -304,7 +323,15 @@ namespace Client2
             // Обновление доступности кнопок
             UpdateButtonStates();
         }
-
+        private void OpponentSea_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (isGameStarted && isUserFieldEditable && YourSea.SelectedCells.Count == 1)
+            {
+                AttackOpponentCell();
+               
+            }
+        }
+        //--------------------------------------------------
         // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
         //--------------------------------------------------
         private void MoveTo(Ship currentShip, int rowIndex, int columnIndex)
@@ -385,22 +412,134 @@ namespace Client2
                     cell.Style.BackColor = Color.LightGray;
                 }
             }
+           // YourSea.Enabled = !isUserFieldEditable;
         }
-        // Обработчик события для таймера повторного запроса при ожидании начала игры
-        private void GameStartTimer_Tick(object sender, EventArgs e)
+        /// <summary>
+        /// Этот корабль конфликтует хотя с одним из уже выставленных?
+        /// </summary>
+        /// <param name="ship"></param>
+        /// <returns>true - конфликтует; false - все нормально</returns>
+        private bool IsShipColliding(Ship ship)
         {
-            // Отправка повторного запроса на сервер
-            WaitForServerResponse();
+            foreach (Ship otherShip in Ships_buffer)
+            {
+                if (CompareShips(ship, otherShip))
+                    return true;
+            }
+
+            return false;
         }
-        // Вспомогательный метод для обработки ответа от сервера
-        
+        /// <summary>
+        /// Сравнивает расположение двух короблей относительно друг друга по клеточно, проверяя соприкасаются/пересекаются ли ячейки
+        /// </summary>
+        /// <param name="ship1"></param>
+        /// <param name="ship2"></param>
+        /// <returns>true - да, пересекаются/соприкасаются; false - нет, все нормально</returns>
+        private bool CompareShips(Ship ship1, Ship ship2)
+        {
+            foreach (SeaCell cell1 in ship1.ShipCells)
+            {
+                foreach (SeaCell cell2 in ship2.ShipCells)
+                {
+                    // Проверяем, что ячейки кораблей пересекаются
+                    if (Math.Abs(cell1.X - cell2.X) <= 1 && Math.Abs(cell1.Y - cell2.Y) <= 1)
+                        return true;
+                }
+            }
+
+            return false;
+        }
 
         private void ClientGameTransformation()
         {
+            isGameStarted = true;
+            isUserFieldEditable = false;
             MessageBox.Show("Игра началась");
+
+            // Включить и отрисовать поле противника
+            InitOpponentSea();
+
+            // Запросить начальное состояние игры с сервера
+            SendMessageToServer("GetGameState");
         }
+        #region РЕЖИМ АТАКИ
+        private void InitOpponentSea()
+        {
+            OpponentSea.Enabled = true;
+        }
+        private async void AttackOpponentCell()
+        {
+            // Получение координат выделенной пользователем клетки
+            int selectedCellX = YourSea.SelectedCells[0].ColumnIndex;
+            int selectedCellY = YourSea.SelectedCells[0].RowIndex;
+
+            // Отправка координат на сервер
+            string message = $"Attack:{selectedCellX},{selectedCellY}";
+            SendMessageToServer(message);
+        }
+        /// <summary>
+        /// Результат нашей атаки
+        /// </summary>
+        /// <param name="result"></param>
+        private void ProcessAttackResult(string result)
+        {
+            int attackedCellX, attackedCellY;
+            bool isHit;
+
+            // Разбор ответа сервера
+            string[] tokens = result.Split(',');
+            attackedCellX = int.Parse(tokens[1]);
+            attackedCellY = int.Parse(tokens[2]);
+            isHit = tokens[0] == "you_shot"; // || tokens[0] == "opponent_shot";
+
+            // Окрашивание клетки на поле пользователя или противника в зависимости от результата атаки
+            if (isHit)
+            {
+                DataGridViewCell cell = YourSea.Rows[attackedCellY].Cells[attackedCellX];
+                cell.Style.BackColor = Color.Red;
+                cell.Value = "X";
+            }
+            else
+            {
+                DataGridViewCell cell = OpponentSea.Rows[attackedCellY].Cells[attackedCellX];
+                cell.Style.BackColor = Color.Black;
+                cell.Value = "*";
+            }
+
+        }
+        /// <summary>
+        /// результат атаки противника по нашему полю
+        /// </summary>
+        /// <param name="result"></param>
+        private void ProcessOpponentAttackResult(string result)
+        {
+            result = result.Substring("OpponentAttackResult:".Length);
+            int attackedCellX, attackedCellY;
+            bool isHit;
+
+            // Разбор ответа сервера
+            string[] tokens = result.Split(',');
+            attackedCellX = int.Parse(tokens[1]);
+            attackedCellY = int.Parse(tokens[2]);
+            isHit = tokens[0] == /*"you_fail" || tokens[0] ==*/ "opponent_shot";
+
+            // Окрашивание клетки на поле пользователя в зависимости от результата атаки
+            if (isHit)
+            {
+                DataGridViewCell cell = YourSea.Rows[attackedCellY].Cells[attackedCellX];
+                cell.Style.BackColor = Color.Black;
+
+            }
+            else
+            {
+                DataGridViewCell cell = YourSea.Rows[attackedCellY].Cells[attackedCellX];
+                cell.Style.BackColor = Color.Blue;
+            }
+        }
+
         #endregion
 
+        #endregion
 
 
     }

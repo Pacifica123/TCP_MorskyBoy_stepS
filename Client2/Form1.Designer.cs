@@ -37,7 +37,9 @@
             this.rbVertical = new System.Windows.Forms.RadioButton();
             this.btnDisconnect = new System.Windows.Forms.Button();
             this.btnSend = new System.Windows.Forms.Button();
+            this.OpponentSea = new System.Windows.Forms.DataGridView();
             ((System.ComponentModel.ISupportInitialize)(this.YourSea)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.OpponentSea)).BeginInit();
             this.SuspendLayout();
             // 
             // txtIpAddress
@@ -67,6 +69,7 @@
             this.YourSea.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.YourSea.ColumnHeadersVisible = false;
             this.YourSea.Location = new System.Drawing.Point(135, 77);
+            this.YourSea.MultiSelect = false;
             this.YourSea.Name = "YourSea";
             this.YourSea.ReadOnly = true;
             this.YourSea.RowHeadersVisible = false;
@@ -137,11 +140,32 @@
             this.btnSend.UseVisualStyleBackColor = true;
             this.btnSend.Click += new System.EventHandler(this.btnSend_Click);
             // 
+            // OpponentSea
+            // 
+            this.OpponentSea.AllowUserToAddRows = false;
+            this.OpponentSea.AllowUserToDeleteRows = false;
+            this.OpponentSea.AllowUserToResizeColumns = false;
+            this.OpponentSea.AllowUserToResizeRows = false;
+            this.OpponentSea.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.OpponentSea.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.OpponentSea.ColumnHeadersVisible = false;
+            this.OpponentSea.Enabled = false;
+            this.OpponentSea.Location = new System.Drawing.Point(475, 77);
+            this.OpponentSea.MultiSelect = false;
+            this.OpponentSea.Name = "OpponentSea";
+            this.OpponentSea.ReadOnly = true;
+            this.OpponentSea.RowHeadersVisible = false;
+            this.OpponentSea.ScrollBars = System.Windows.Forms.ScrollBars.None;
+            this.OpponentSea.Size = new System.Drawing.Size(250, 250);
+            this.OpponentSea.TabIndex = 9;
+            this.OpponentSea.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.OpponentSea_CellDoubleClick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.OpponentSea);
             this.Controls.Add(this.btnSend);
             this.Controls.Add(this.btnDisconnect);
             this.Controls.Add(this.rbVertical);
@@ -155,6 +179,7 @@
             this.Text = "Form1";
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.YourSea)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.OpponentSea)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -171,6 +196,7 @@
         private System.Windows.Forms.RadioButton rbVertical;
         private System.Windows.Forms.Button btnDisconnect;
         private System.Windows.Forms.Button btnSend;
+        private System.Windows.Forms.DataGridView OpponentSea;
     }
 }
 
