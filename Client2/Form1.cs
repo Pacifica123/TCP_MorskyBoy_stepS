@@ -12,6 +12,8 @@ using System.Windows.Forms;
 using Server2.Engine;
 using Newtonsoft.Json;
 using System.IO;
+using System.Net;
+using System.Net.NetworkInformation;
 
 namespace Client2
 {
@@ -43,6 +45,8 @@ namespace Client2
         static string ipServer; // Конечная точка подключения
         List<Ship> Ships_buffer = new List<Ship>(); // Буферный список для отправки кораблей на сервер
         private List<Ship> shipBuffer;  // Буферный список кораблей для размещения на поле
+        IPAddress MyIP = Dns.GetHostEntry(Dns.GetHostName()).AddressList
+            .FirstOrDefault(addr => addr.AddressFamily==AddressFamily.InterNetwork);
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -141,7 +145,7 @@ namespace Client2
             // Отправка запроса на сервер в зависимости от состояния игры
             if (!isGameStarted)
                 SendMessageToServer("YouReady?");
-            else SendMessageToServer("OpponentAlreadyAtacked?"); // получить ответ о том, как сходил противник
+            else SendMessageToServer("OpponentAlreadyAtacked?");    // получить ответ о том, как сходил противник
         }
 
         private string ReceiveMessageFromServer(NetworkStream stream)
@@ -187,8 +191,8 @@ namespace Client2
                     // Ожидание ответа от сервера
                     WaitForServerResponse();
                     break;
-                case "GameStarted":
-                    ClientGameTransformation();
+                case string result when result.StartsWith("GameStarted"):
+                    ClientGameTransformation(result.Substring("GameStarted:".Length));
                     break;
                 case string result when result.StartsWith("AttackResult"):
                     ProcessAttackResult(result);
@@ -450,7 +454,7 @@ namespace Client2
             return false;
         }
 
-        private void ClientGameTransformation()
+        private void ClientGameTransformation(string WhosTurn)
         {
             isGameStarted = true;
             isUserFieldEditable = false;
@@ -459,8 +463,16 @@ namespace Client2
             // Включить и отрисовать поле противника
             InitOpponentSea();
 
-            // Запросить начальное состояние игры с сервера
-            SendMessageToServer("GetGameState");
+            if (WhosTurn == MyIP.ToString())
+            {
+                MessageBox.Show("Право первого хода...Досталось вам!");
+                //игрок атакует поле противника - это событие Дабл-клика "OpponentSea_CellDoubleClick"
+            }
+            else
+            {
+                MessageBox.Show("Право первого хода...Досталось оппоненту.");
+                SendMessageToServer("OpponentAlreadyAtacked?");
+            }
         }
         #region РЕЖИМ АТАКИ
         private void InitOpponentSea()

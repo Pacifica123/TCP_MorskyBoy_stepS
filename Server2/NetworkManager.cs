@@ -212,7 +212,7 @@ namespace Server2
             game.GameStarted = true;
             game.CurrentPlayer = game.Players[0];
 
-            return "GameStarted";
+            return "GameStarted:"+game.CurrentPlayer.PlayerId; //чей ход
         }
         private Player FindPlayerById(string playerId)
         {
