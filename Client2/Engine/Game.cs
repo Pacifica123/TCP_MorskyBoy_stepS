@@ -15,7 +15,7 @@ namespace Server2.Engine
         public bool IsFilledGame { get; set; }
         public bool GameStarted { get; set; }
         public bool GameOver { get; set; }
-        public Turn? LastTurn { get; set; }
+        public Turn LastTurn { get; set; }
 
 
 

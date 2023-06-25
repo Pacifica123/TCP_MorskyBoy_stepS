@@ -120,7 +120,7 @@ namespace Client2
         {
             while (true)
             {
-                await Task.Delay(5000);
+                await Task.Delay(1000);
                 SendMessageToServer("get_state");
 
             }
@@ -159,7 +159,7 @@ namespace Client2
             // Отправка запроса на сервер в зависимости от состояния игры
             if (!isGameStarted)
                 SendMessageToServer("YouReady?");
-            else SendMessageToServer("OpponentAlreadyAtacked?");    // получить ответ о том, как сходил противник
+            // тут должен был быть else с отправкой OpponentAlreadyAttacked? но потом все пошло немного по другому
         }   
 
         private string ReceiveMessageFromServer(NetworkStream stream)
@@ -209,11 +209,11 @@ namespace Client2
                     ClientGameTransformation(result.Substring("GameStarted:".Length));
                     break;
                 case string result when result.StartsWith("AttackResult"):
-                    ProcessAttackResult(result);
+                    ProcessAttackResult(result.Substring("AttackResult".Length));
                     break;
-                case string result when result.StartsWith("OpponentAttackResult"):
-                    ProcessOpponentAttackResult(result);
-                    break;
+                //case string result when result.StartsWith("OpponentAttackResult"):
+                //    ProcessOpponentAttackResult(result);
+                //    break;
                 case "NotAlready":
                     // снова ждем но уже когда сходит пртивник
                     ToolTip waiting = new ToolTip();
@@ -222,6 +222,9 @@ namespace Client2
                     break;
                 case string result when result.StartsWith("STATE"):
                     ProcessGameState(result.Substring("STATE".Length));
+                    break;
+                case "NotYourTurn":
+                    MessageBox.Show("Сейчас не ваш ход!");
                     break;
                 default:
                     // Обработка неизвестного ответа
@@ -237,6 +240,11 @@ namespace Client2
         {
             Game currentGameState = JsonConvert.DeserializeObject<Game>(GameStateJSON);
             OpponentSea.Enabled = currentGameState.CurrentPlayer.PlayerId == MyIP.ToString(); //разрешено ли ходить пользователю
+            if(currentGameState.LastTurn.AtackedPlayer.PlayerId == MyIP.ToString())
+            {
+                Turn last = currentGameState.LastTurn;
+                ProcessOpponentAttackResult(last.X, last.Y, last.resultForNextPlayer);
+            }
 
             GetGameStateMotor();
         }
@@ -527,19 +535,21 @@ namespace Client2
             string[] tokens = result.Split(',');
             attackedCellX = int.Parse(tokens[1]);
             attackedCellY = int.Parse(tokens[2]);
-            isHit = tokens[0] == "you_shot"; // || tokens[0] == "opponent_shot";
+            isHit = tokens[0] == "you_shot";
+
+            OpponentSea.Enabled = isHit;
 
             // Окрашивание клетки на поле пользователя или противника в зависимости от результата атаки
             if (isHit)
             {
-                DataGridViewCell cell = YourSea.Rows[attackedCellY].Cells[attackedCellX];
+                DataGridViewCell cell = OpponentSea.Rows[attackedCellY].Cells[attackedCellX];
                 cell.Style.BackColor = Color.Red;
                 cell.Value = "X";
             }
             else
             {
                 DataGridViewCell cell = OpponentSea.Rows[attackedCellY].Cells[attackedCellX];
-                cell.Style.BackColor = Color.Black;
+                cell.Style.BackColor = Color.DarkGray;
                 cell.Value = "*";
             }
 
@@ -571,6 +581,25 @@ namespace Client2
             {
                 DataGridViewCell cell = YourSea.Rows[attackedCellY].Cells[attackedCellX];
                 cell.Style.BackColor = Color.Blue;
+            }
+        }
+        private void ProcessOpponentAttackResult(int X, int Y, string result)
+        {
+
+            bool isHit = result == "opponent_shot";
+
+            // Окрашивание клетки на поле пользователя в зависимости от результата атаки
+            if (isHit)
+            {
+                DataGridViewCell cell = YourSea.Rows[Y].Cells[X];
+                cell.Style.BackColor = Color.Red;
+                cell.Value = "X";
+            }
+            else
+            {
+                DataGridViewCell cell = YourSea.Rows[Y].Cells[X];
+                cell.Style.BackColor = Color.Aqua;
+
             }
         }
 

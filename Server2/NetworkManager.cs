@@ -122,7 +122,7 @@ namespace Server2
                 // ход атакующего
                 case var attackMessage when attackMessage.StartsWith("Attack:"):
                     string coordinates = attackMessage.Substring("Attack:".Length);
-                    return ProcessAttack(coordinates, client);
+                    return ("AttackResult"+ProcessAttack(coordinates, client));
                 // периодический спрос атакуемого
                 case "OpponentAlreadyAtacked?":
                     Player thisPlayer = FindPlayerById(id);
