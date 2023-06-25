@@ -101,6 +101,7 @@ namespace Client2
                             ipServer = ipAddress;
                         }
                     }
+                    GetGameStateMotor();
                 }
                 catch (Exception ex)
                 {
@@ -112,6 +113,19 @@ namespace Client2
                 MessageBox.Show("Введите действительный IP-адрес", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
+        /// <summary>
+        /// Механизм по периодическому спросу состояния игры у сервера
+        /// </summary>
+        private async void GetGameStateMotor()
+        {
+            while (true)
+            {
+                await Task.Delay(5000);
+                SendMessageToServer("get_state");
+
+            }
+        }
+
         private bool IsValidIpAddress(string ipAddress)
         {
             string pattern = @"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$";
@@ -146,7 +160,7 @@ namespace Client2
             if (!isGameStarted)
                 SendMessageToServer("YouReady?");
             else SendMessageToServer("OpponentAlreadyAtacked?");    // получить ответ о том, как сходил противник
-        }
+        }   
 
         private string ReceiveMessageFromServer(NetworkStream stream)
         {
@@ -206,12 +220,27 @@ namespace Client2
                     waiting.Show("Ждем ответа оппонента...", OpponentSea);
                     WaitForServerResponse();
                     break;
+                case string result when result.StartsWith("STATE"):
+                    ProcessGameState(result.Substring("STATE".Length));
+                    break;
                 default:
                     // Обработка неизвестного ответа
                     MessageBox.Show("Что-то пошло не так!");
                     break;
             }
         }
+        /// <summary>
+        /// Актуализирует клиента под состояние игры на сервер
+        /// </summary>
+        /// <param name="GameStateJSON"></param>
+        private void ProcessGameState(string GameStateJSON)
+        {
+            Game currentGameState = JsonConvert.DeserializeObject<Game>(GameStateJSON);
+            OpponentSea.Enabled = currentGameState.CurrentPlayer.PlayerId == MyIP.ToString(); //разрешено ли ходить пользователю
+
+            GetGameStateMotor();
+        }
+
         //===============================
         #endregion
 
@@ -329,9 +358,9 @@ namespace Client2
         }
         private void OpponentSea_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (isGameStarted && isUserFieldEditable && YourSea.SelectedCells.Count == 1)
+            if (isGameStarted)
             {
-                AttackOpponentCell();
+                AttackOpponentCell(e.ColumnIndex, e.RowIndex);
                
             }
         }
@@ -479,12 +508,8 @@ namespace Client2
         {
             OpponentSea.Enabled = true;
         }
-        private async void AttackOpponentCell()
+        private async void AttackOpponentCell(int selectedCellX, int selectedCellY)
         {
-            // Получение координат выделенной пользователем клетки
-            int selectedCellX = YourSea.SelectedCells[0].ColumnIndex;
-            int selectedCellY = YourSea.SelectedCells[0].RowIndex;
-
             // Отправка координат на сервер
             string message = $"Attack:{selectedCellX},{selectedCellY}";
             SendMessageToServer(message);

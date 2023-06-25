@@ -17,14 +17,7 @@ namespace Server2.Engine
         public bool GameOver { get; set; }
         public Turn? LastTurn { get; set; }
 
-        public struct Turn
-        {
-            public Player AtackedPlayer { get; set; }
-            public Player Atacker { get; set; }
-            public int X { get; set; }
-            public int Y{ get; set; }
-            public string resultForNextPlayer { get; set; } //opponent_fail или opponent_shot - результат для текущего игрока
-        }
+   
 
         public Game(int id)
         {
@@ -100,5 +93,14 @@ namespace Server2.Engine
             LastTurn = lastTurn;
             return false; // Атака неудачна (промах)
         }
+    }
+
+    public class Turn
+    {
+        public Player AtackedPlayer { get; set; }
+        public Player Atacker { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
+        public string resultForNextPlayer { get; set; } //opponent_fail или opponent_shot - результат для текущего игрока
     }
 }

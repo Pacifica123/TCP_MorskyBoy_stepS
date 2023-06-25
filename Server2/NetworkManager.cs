@@ -110,22 +110,49 @@ namespace Server2
             string id = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
             switch (message)
             {
+                // подключени
                 case "test":
                     return "Good!";
+                // расстановка
                 case var placementMessage when placementMessage.StartsWith("placement:"):
                     return placementShips(placementMessage.Substring("placement:".Length), client);
+                // периодический спрос клиента после расстановки
                 case "YouReady?":
                     return CheckSecondPlayer(FindPlayerById(id));
-                case var attackMessage when attackMessage.StartsWith("attack:"):
-                    string coordinates = attackMessage.Substring("attack:".Length);
+                // ход атакующего
+                case var attackMessage when attackMessage.StartsWith("Attack:"):
+                    string coordinates = attackMessage.Substring("Attack:".Length);
                     return ProcessAttack(coordinates, client);
+                // периодический спрос атакуемого
                 case "OpponentAlreadyAtacked?":
                     Player thisPlayer = FindPlayerById(id);
                     return ProcessAttackForOpponent(FindGameById(thisPlayer.GameId));
+                case "disconnect":
+                    RemovePlayer(id);
+                    return ""; //игроку уже ничто не нужно после отключения
+                case "get_state":
+                    return ("STATE" + GetStateJSON(id));
+                // непонятная дичь
                 default:
                     return "Default";
             }
         }
+
+        private string GetStateJSON(string id)
+        {
+            Game thisGame = FindGameById(FindPlayerById(id).GameId);
+            Console.WriteLine($"Игрок {id} запросил текущее состояние игры");
+            return JsonConvert.SerializeObject(thisGame);
+        }
+
+        private void RemovePlayer(string id)
+        {
+            Player thisPlayer = FindPlayerById(id);
+            Game thisGame = FindGameById(thisPlayer.GameId);
+            thisGame.Players.Remove(thisPlayer);
+            
+        }
+
         /// <summary>
         /// Ответ на каждый 10-секундый вопрос клиента о том сходил ли оппонент
         /// </summary>
@@ -134,9 +161,9 @@ namespace Server2
         private string ProcessAttackForOpponent(Game game)
         {
             string answer = "OpponentAttackResult:";
-            answer += game.LastTurn.Value.resultForNextPlayer; //tokens[0]
-            answer += "," + game.LastTurn.Value.X.ToString(); //tokens[1]
-            answer += "," + game.LastTurn.Value.Y.ToString(); //tokens[2]
+            answer += game.LastTurn.resultForNextPlayer; //tokens[0]
+            answer += "," + game.LastTurn.X.ToString(); //tokens[1]
+            answer += "," + game.LastTurn.Y.ToString(); //tokens[2]
             return answer;
         }
 
