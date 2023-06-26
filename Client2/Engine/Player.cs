@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,6 +18,14 @@ namespace Server2.Engine
         {
             PlayerId = id;
             GameId = game.GameId;
+            Status = false;
+            PlayerSea = new Sea();
+        }
+        [JsonConstructor]
+        public Player(string id, int gameID)
+        {
+            PlayerId = id;
+            GameId = gameID;
             Status = false;
             PlayerSea = new Sea();
         }

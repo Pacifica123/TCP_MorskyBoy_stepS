@@ -118,12 +118,9 @@ namespace Client2
         /// </summary>
         private async void GetGameStateMotor()
         {
-            while (true)
-            {
-                await Task.Delay(1000);
+                await Task.Delay(3000);
                 SendMessageToServer("get_state");
 
-            }
         }
 
         private bool IsValidIpAddress(string ipAddress)
@@ -238,13 +235,19 @@ namespace Client2
         /// <param name="GameStateJSON"></param>
         private void ProcessGameState(string GameStateJSON)
         {
-            Game currentGameState = JsonConvert.DeserializeObject<Game>(GameStateJSON);
-            OpponentSea.Enabled = currentGameState.CurrentPlayer.PlayerId == MyIP.ToString(); //разрешено ли ходить пользователю
-            if(currentGameState.LastTurn.AtackedPlayer.PlayerId == MyIP.ToString())
+            Player player = JsonConvert.DeserializeObject<Player>(GameStateJSON);
+            Game currentGameState = JsonConvert.DeserializeObject<Game>(GameStateJSON, new JsonSerializerSettings());
+            if (currentGameState.Players.Count == 2)
+                OpponentSea.Enabled = currentGameState.CurrentPlayer.PlayerId == MyIP.ToString(); //разрешено ли ходить пользователю
+            if (currentGameState.LastTurn != null)
             {
-                Turn last = currentGameState.LastTurn;
-                ProcessOpponentAttackResult(last.X, last.Y, last.resultForNextPlayer);
+                if (currentGameState.LastTurn.AtackedPlayer.PlayerId == MyIP.ToString())
+                {
+                    Turn last = currentGameState.LastTurn;
+                    ProcessOpponentAttackResult(last.X, last.Y, last.resultForNextPlayer);
+                }
             }
+            
 
             GetGameStateMotor();
         }
