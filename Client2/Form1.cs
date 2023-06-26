@@ -122,7 +122,7 @@ namespace Client2
                 SendMessageToServer("get_state");
 
         }
-
+         
         private bool IsValidIpAddress(string ipAddress)
         {
             string pattern = @"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$";
