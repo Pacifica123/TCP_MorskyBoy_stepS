@@ -117,7 +117,7 @@ namespace Client2
         /// Механизм по периодическому спросу состояния игры у сервера
         /// </summary>
         private async void GetGameStateMotor()
-        {
+        { 
                 await Task.Delay(3000);
                 SendMessageToServer("get_state");
 
