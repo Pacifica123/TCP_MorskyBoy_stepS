@@ -161,12 +161,8 @@ namespace Client2
 
         private string ReceiveMessageFromServer(NetworkStream stream)
         {
-            byte[] buffer = new byte[1024]; // Буфер для приема данных
-            StringBuilder stringBuilder = new StringBuilder(); // Строка для сбора принятых данных
-
-            // Прием данных от сервера
             //собираем ответ с Сервака
-            byte[] responseBytes = new byte[1024];
+            byte[] responseBytes = new byte[4096];
             int bytesRead = stream.Read(responseBytes, 0, responseBytes.Length);
             string response = Encoding.ASCII.GetString(responseBytes, 0, bytesRead);
             return response;
@@ -235,9 +231,9 @@ namespace Client2
         /// <param name="GameStateJSON"></param>
         private void ProcessGameState(string GameStateJSON)
         {
-            Player player = JsonConvert.DeserializeObject<Player>(GameStateJSON);
+            //Player player = JsonConvert.DeserializeObject<Player>(GameStateJSON);
             Game currentGameState = JsonConvert.DeserializeObject<Game>(GameStateJSON, new JsonSerializerSettings());
-            if (currentGameState.Players.Count == 2)
+            if (currentGameState.Players.Count == 2 && currentGameState.GameStarted)
                 OpponentSea.Enabled = currentGameState.CurrentPlayer.PlayerId == MyIP.ToString(); //разрешено ли ходить пользователю
             if (currentGameState.LastTurn != null)
             {
@@ -517,7 +513,16 @@ namespace Client2
         #region РЕЖИМ АТАКИ
         private void InitOpponentSea()
         {
-            OpponentSea.Enabled = true;
+            if (OpponentSea.InvokeRequired)
+            {
+                OpponentSea.Invoke((MethodInvoker)delegate { OpponentSea.Enabled = true; });
+
+            }
+            else
+            {
+                OpponentSea.Enabled = true;
+            }
+
         }
         private async void AttackOpponentCell(int selectedCellX, int selectedCellY)
         {
@@ -540,7 +545,11 @@ namespace Client2
             attackedCellY = int.Parse(tokens[2]);
             isHit = tokens[0] == "you_shot";
 
-            OpponentSea.Enabled = isHit;
+            if (OpponentSea.InvokeRequired)
+            {
+                OpponentSea.Invoke((MethodInvoker)delegate { OpponentSea.Enabled = isHit; });
+            }
+            else OpponentSea.Enabled = isHit;
 
             // Окрашивание клетки на поле пользователя или противника в зависимости от результата атаки
             if (isHit)

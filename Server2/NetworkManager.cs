@@ -84,7 +84,7 @@ namespace Server2
         private void ProcessClient(TcpClient client)
         {
             NetworkStream stream = client.GetStream();
-            byte[] buffer = new byte[2048];
+            byte[] buffer = new byte[4096];
             int bytesRead;
 
             while (client.Connected && (bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
