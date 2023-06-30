@@ -98,6 +98,7 @@ namespace Client2
                             string response = Encoding.UTF8.GetString(data, 0, bytesRead);
 
                             txtIpAddress.Text = response;
+                            ProcessServerResponse(response);
 
                             ipServer = ipAddress;
                         }
@@ -226,6 +227,8 @@ namespace Client2
                 case "NotYourTurn":
                     MessageBox.Show("Сейчас не ваш ход!");
                     break;
+                case "Good!":
+                    break;
                 default:
                     // Обработка неизвестного ответа
                     MessageBox.Show("Что-то пошло не так!");
@@ -285,7 +288,7 @@ namespace Client2
             // Отправляем запрос на отключение клиента
             // Отправить запрос на отключение клиента на сервер
             string disconnectMessage = "disconnect"; // Здесь может быть любое сообщение, которое сервер будет распознавать как запрос на отключение
-            SendMessageToServer(disconnectMessage);
+            SendMessageToServer(disconnectMessage); 
         }
         private void btnSend_Click(object sender, EventArgs e)
         {
@@ -539,8 +542,13 @@ namespace Client2
         {
             if (OpponentSea.InvokeRequired)
             {
-                OpponentSea.Invoke((MethodInvoker)delegate { OpponentSea.Enabled = true; });
-
+                OpponentSea.Invoke((MethodInvoker)delegate 
+                { 
+                    OpponentSea.Enabled = true;
+                    OpponentSea.ColumnCount = 10;
+                    OpponentSea.RowCount = 10;
+                });
+                
             }
             else
             {

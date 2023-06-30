@@ -33,7 +33,7 @@ namespace Server2.Engine
         {
             Players = new List<Player>();
             GameId = id;
-            
+            LastTurn = new Turn();
         }
 
         public void ChangePlayer()  
@@ -76,13 +76,17 @@ namespace Server2.Engine
                 return false; // Атака невозможна (клетка уже атакована или некорректные координаты)
             }
 
-            Turn lastTurn = new Turn
-            {
-                AtackedPlayer = opponent,
-                Atacker = CurrentPlayer,
-                X = x,
-                Y = y
-            };
+            //Turn lastTurn = new Turn
+            //{
+            //    AtackedPlayer = opponent,
+            //    Atacker = CurrentPlayer,
+            //    X = x,
+            //    Y = y
+            //};
+            LastTurn.Atacker = CurrentPlayer;
+            LastTurn.AtackedPlayer = opponent;
+            LastTurn.X = x;
+            LastTurn.Y = y;
 
             // Проверка, попал ли атакующий по кораблю
             if (targetCell.State == SeaCell.CellState.OccupiedByShip)
@@ -93,14 +97,14 @@ namespace Server2.Engine
                 // Нанесение повреждения кораблю
                 targetShip.Damage();
                 targetCell.State = SeaCell.CellState.Attacked;
-                lastTurn.resultForNextPlayer = "opponent_shot";
+                LastTurn.resultForNextPlayer = "opponent_shot";
 
                 return true; // Атака успешна (попадание по кораблю)
             }
             // Обновление состояния целевой клетки
             targetCell.State = SeaCell.CellState.Attacked;
-            lastTurn.resultForNextPlayer = "opponent_fail";
-            LastTurn = lastTurn;
+            LastTurn.resultForNextPlayer = "opponent_fail";
+           // LastTurn = lastTurn;
             return false; // Атака неудачна (промах)
         }
     }
@@ -117,5 +121,14 @@ namespace Server2.Engine
         public int Y { get; set; }
         [ProtoMember(5)]
         public string resultForNextPlayer { get; set; } //opponent_fail или opponent_shot - результат для текущего игрока
+        public Turn(Player current, Player opponent)
+        {
+            Atacker = current;
+            resultForNextPlayer = "NotAlready";
+        }
+        public Turn()
+        {
+            resultForNextPlayer = "NotAlredy";
+        }
     }
 }

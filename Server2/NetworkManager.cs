@@ -174,7 +174,15 @@ namespace Server2
         private string ProcessAttackForOpponent(Game game)
         {
             string answer = "OpponentAttackResult:";
-            answer += game.LastTurn.resultForNextPlayer; //tokens[0]
+            if (game.LastTurn != null || game.LastTurn.resultForNextPlayer == null)
+            {
+                answer += game.LastTurn.resultForNextPlayer; //tokens[0]
+            }
+            else
+            {
+                answer += "NotAlready"; //tokens[0]
+            } 
+            
             answer += "," + game.LastTurn.X.ToString(); //tokens[1]
             answer += "," + game.LastTurn.Y.ToString(); //tokens[2]
             return answer;
