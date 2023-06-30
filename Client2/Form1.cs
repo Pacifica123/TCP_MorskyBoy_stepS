@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
+using ProtoBuf;
 
 namespace Client2
 {
@@ -164,7 +165,9 @@ namespace Client2
             //собираем ответ с Сервака
             byte[] responseBytes = new byte[4096];
             int bytesRead = stream.Read(responseBytes, 0, responseBytes.Length);
-            string response = Encoding.ASCII.GetString(responseBytes, 0, bytesRead);
+            
+            string response = Encoding.UTF8.GetString(responseBytes, 0, bytesRead);
+            if (response.Contains("STATE")) return Convert.ToBase64String(responseBytes);
             return response;
         }
 
@@ -213,8 +216,12 @@ namespace Client2
                     waiting.Show("Ждем ответа оппонента...", OpponentSea);
                     WaitForServerResponse();
                     break;
-                case string result when result.StartsWith("STATE"):
-                    ProcessGameState(result.Substring("STATE".Length));
+                case string result when result.Contains("STATE"):
+                    string base64Data = result.Substring("STATE".Length);
+                    //byte[] decodedBytes = Convert.FromBase64String(base64Data);
+                    //string decodedString = Convert.ToBase64String(decodedBytes);
+                    //ProcessGameState(decodedString);
+                    ProcessGameState(base64Data);
                     break;
                 case "NotYourTurn":
                     MessageBox.Show("Сейчас не ваш ход!");
@@ -229,23 +236,40 @@ namespace Client2
         /// Актуализирует клиента под состояние игры на сервер
         /// </summary>
         /// <param name="GameStateJSON"></param>
-        private void ProcessGameState(string GameStateJSON)
+        private void ProcessGameState(string GameState)
         {
-            //Player player = JsonConvert.DeserializeObject<Player>(GameStateJSON);
-            Game currentGameState = JsonConvert.DeserializeObject<Game>(GameStateJSON, new JsonSerializerSettings());
-            if (currentGameState.Players.Count == 2 && currentGameState.GameStarted)
-                OpponentSea.Enabled = currentGameState.CurrentPlayer.PlayerId == MyIP.ToString(); //разрешено ли ходить пользователю
-            if (currentGameState.LastTurn != null)
-            {
-                if (currentGameState.LastTurn.AtackedPlayer.PlayerId == MyIP.ToString())
-                {
-                    Turn last = currentGameState.LastTurn;
-                    ProcessOpponentAttackResult(last.X, last.Y, last.resultForNextPlayer);
-                }
-            }
-            
+            ////Player player = JsonConvert.DeserializeObject<Player>(GameStateJSON);
+            //Game currentGameState = JsonConvert.DeserializeObject<Game>(GameStateJSON, new JsonSerializerSettings());
+            //if (currentGameState.Players.Count == 2 && currentGameState.GameStarted)
+            //    OpponentSea.Enabled = currentGameState.CurrentPlayer.PlayerId == MyIP.ToString(); //разрешено ли ходить пользователю
+            //if (currentGameState.LastTurn != null)
+            //{
+            //    if (currentGameState.LastTurn.AtackedPlayer.PlayerId == MyIP.ToString())
+            //    {
+            //        Turn last = currentGameState.LastTurn;
+            //        ProcessOpponentAttackResult(last.X, last.Y, last.resultForNextPlayer);
+            //    }
+            //}
+            byte[] serializedData = Convert.FromBase64String(GameState);
 
-            GetGameStateMotor();
+            using (MemoryStream stream = new MemoryStream(serializedData))
+            {
+                Game currentGameState = Serializer.Deserialize<Game>(stream);
+
+                if (currentGameState.Players.Count == 2 && currentGameState.GameStarted)
+                    OpponentSea.Enabled = currentGameState.CurrentPlayer.PlayerId == MyIP.ToString();
+
+                if (currentGameState.LastTurn != null)
+                {
+                    if (currentGameState.LastTurn.AtackedPlayer.PlayerId == MyIP.ToString())
+                    {
+                        Turn last = currentGameState.LastTurn;
+                        ProcessOpponentAttackResult(last.X, last.Y, last.resultForNextPlayer);
+                    }
+                }
+
+                GetGameStateMotor();
+            }
         }
 
         //===============================

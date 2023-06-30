@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -7,16 +8,23 @@ using System.Threading.Tasks;
 
 namespace Server2.Engine
 {
+    [ProtoContract]
     public class Game
     {
+        [ProtoMember(1)]
         public int GameId { get; set; }
+        [ProtoMember(2)]
         public List<Player> Players { get; set; }
+        [ProtoMember(3)]
         public Player CurrentPlayer { get; set; }
+        [ProtoMember(4)]
         public bool IsFilledGame { get; set; }
+        [ProtoMember(5)]
         public bool GameStarted { get; set; }
+        [ProtoMember(6)]
         public bool GameOver { get; set; }
+        [ProtoMember(7)]
         public Turn LastTurn { get; set; }
-
 
 
         public Game(int id)
@@ -94,13 +102,18 @@ namespace Server2.Engine
             return false; // Атака неудачна (промах)
         }
     }
-
+    [ProtoContract]
     public class Turn
     {
+        [ProtoMember(1)]
         public Player AtackedPlayer { get; set; }
+        [ProtoMember(2)]
         public Player Atacker { get; set; }
+        [ProtoMember(3)]
         public int X { get; set; }
+        [ProtoMember(4)]
         public int Y { get; set; }
+        [ProtoMember(5)]
         public string resultForNextPlayer { get; set; } //opponent_fail или opponent_shot - результат для текущего игрока
     }
 }
