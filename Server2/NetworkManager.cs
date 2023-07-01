@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using Newtonsoft.Json;
+using ProtoBuf;
 
 namespace Server2
 {
@@ -84,7 +85,7 @@ namespace Server2
         private void ProcessClient(TcpClient client)
         {
             NetworkStream stream = client.GetStream();
-            byte[] buffer = new byte[2048];
+            byte[] buffer = new byte[4000];
             int bytesRead;
 
             while (client.Connected && (bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
@@ -131,13 +132,25 @@ namespace Server2
                     RemovePlayer(id);
                     return ""; //игроку уже ничто не нужно после отключения
                 case "get_state":
-                    return ("STATE" + GetStateJSON(id));
+                    return (GetStateBin_String(id));
                 // непонятная дичь
                 default:
                     return "Default";
             }
         }
+        private string GetStateBin_String(string id)
+        {
+            Game thisGame = FindGameById(FindPlayerById(id).GameId);
+            Console.WriteLine($"Игрок {id} запросил текущее состояние игры");
 
+            using (MemoryStream stream = new MemoryStream())
+            {
+                Serializer.Serialize(stream, thisGame);
+                byte[] serializedData = stream.ToArray();
+                string stateString = "STATE" + Convert.ToBase64String(serializedData);
+                return stateString;
+            }
+        }
         private string GetStateJSON(string id)
         {
             Game thisGame = FindGameById(FindPlayerById(id).GameId);
@@ -161,7 +174,15 @@ namespace Server2
         private string ProcessAttackForOpponent(Game game)
         {
             string answer = "OpponentAttackResult:";
-            answer += game.LastTurn.resultForNextPlayer; //tokens[0]
+            if (game.LastTurn != null || game.LastTurn.resultForNextPlayer == null)
+            {
+                answer += game.LastTurn.resultForNextPlayer; //tokens[0]
+            }
+            else
+            {
+                answer += "NotAlready"; //tokens[0]
+            } 
+            
             answer += "," + game.LastTurn.X.ToString(); //tokens[1]
             answer += "," + game.LastTurn.Y.ToString(); //tokens[2]
             return answer;
@@ -309,14 +330,14 @@ namespace Server2
             if (isHit)
             {
                 thisGame.CurrentPlayer = thisPlayer; // Ход остается у текущего клиента
-                return "you_shot";
+                return ("you_shot,"+coordinates);
             }
             else
             {
                 // Ход передается оппоненту
                 thisGame.ChangePlayer();
 
-                return "you_fail";
+                return ("you_fail," + coordinates);
             }
         }
 

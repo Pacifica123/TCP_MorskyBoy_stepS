@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
+using ProtoBuf;
 
 namespace Client2
 {
@@ -97,6 +98,7 @@ namespace Client2
                             string response = Encoding.UTF8.GetString(data, 0, bytesRead);
 
                             txtIpAddress.Text = response;
+                            ProcessServerResponse(response);
 
                             ipServer = ipAddress;
                         }
@@ -117,15 +119,12 @@ namespace Client2
         /// Механизм по периодическому спросу состояния игры у сервера
         /// </summary>
         private async void GetGameStateMotor()
-        {
-            while (true)
-            {
-                await Task.Delay(1000);
+        { 
+                await Task.Delay(3000);
                 SendMessageToServer("get_state");
 
-            }
         }
-
+         
         private bool IsValidIpAddress(string ipAddress)
         {
             string pattern = @"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$";
@@ -164,14 +163,12 @@ namespace Client2
 
         private string ReceiveMessageFromServer(NetworkStream stream)
         {
-            byte[] buffer = new byte[1024]; // Буфер для приема данных
-            StringBuilder stringBuilder = new StringBuilder(); // Строка для сбора принятых данных
-
-            // Прием данных от сервера
             //собираем ответ с Сервака
-            byte[] responseBytes = new byte[1024];
+            byte[] responseBytes = new byte[4096];
             int bytesRead = stream.Read(responseBytes, 0, responseBytes.Length);
-            string response = Encoding.ASCII.GetString(responseBytes, 0, bytesRead);
+            
+            string response = Encoding.UTF8.GetString(responseBytes, 0, bytesRead);
+            if (response.Contains("STATE")) return Convert.ToBase64String(responseBytes);
             return response;
         }
 
@@ -220,11 +217,17 @@ namespace Client2
                     waiting.Show("Ждем ответа оппонента...", OpponentSea);
                     WaitForServerResponse();
                     break;
-                case string result when result.StartsWith("STATE"):
-                    ProcessGameState(result.Substring("STATE".Length));
+                case string result when result.Contains("STATE"):
+                    string base64Data = result.Substring("STATE".Length);
+                    //byte[] decodedBytes = Convert.FromBase64String(base64Data);
+                    //string decodedString = Convert.ToBase64String(decodedBytes);
+                    //ProcessGameState(decodedString);
+                    ProcessGameState(base64Data);
                     break;
                 case "NotYourTurn":
                     MessageBox.Show("Сейчас не ваш ход!");
+                    break;
+                case "Good!":
                     break;
                 default:
                     // Обработка неизвестного ответа
@@ -235,18 +238,41 @@ namespace Client2
         /// <summary>
         /// Актуализирует клиента под состояние игры на сервер
         /// </summary>
-        /// <param name="GameStateJSON"></param>
-        private void ProcessGameState(string GameStateJSON)
+        /// <param name="GameStateBIN"></param>
+        private void ProcessGameState(string GameState)
         {
-            Game currentGameState = JsonConvert.DeserializeObject<Game>(GameStateJSON);
-            OpponentSea.Enabled = currentGameState.CurrentPlayer.PlayerId == MyIP.ToString(); //разрешено ли ходить пользователю
-            if(currentGameState.LastTurn.AtackedPlayer.PlayerId == MyIP.ToString())
-            {
-                Turn last = currentGameState.LastTurn;
-                ProcessOpponentAttackResult(last.X, last.Y, last.resultForNextPlayer);
-            }
+            ////Player player = JsonConvert.DeserializeObject<Player>(GameStateJSON);
+            //Game currentGameState = JsonConvert.DeserializeObject<Game>(GameStateJSON, new JsonSerializerSettings());
+            //if (currentGameState.Players.Count == 2 && currentGameState.GameStarted)
+            //    OpponentSea.Enabled = currentGameState.CurrentPlayer.PlayerId == MyIP.ToString(); //разрешено ли ходить пользователю
+            //if (currentGameState.LastTurn != null)
+            //{
+            //    if (currentGameState.LastTurn.AtackedPlayer.PlayerId == MyIP.ToString())
+            //    {
+            //        Turn last = currentGameState.LastTurn;
+            //        ProcessOpponentAttackResult(last.X, last.Y, last.resultForNextPlayer);
+            //    }
+            //}
+            byte[] serializedData = Convert.FromBase64String(GameState);
 
-            GetGameStateMotor();
+            using (MemoryStream stream = new MemoryStream(serializedData))
+            {
+                Game currentGameState = Serializer.Deserialize<Game>(stream);
+
+                if (currentGameState.Players.Count == 2 && currentGameState.GameStarted)
+                    OpponentSea.Enabled = currentGameState.CurrentPlayer.PlayerId == MyIP.ToString();
+
+                if (currentGameState.LastTurn != null)
+                {
+                    if (currentGameState.LastTurn.AtackedPlayer.PlayerId == MyIP.ToString())
+                    {
+                        Turn last = currentGameState.LastTurn;
+                        ProcessOpponentAttackResult(last.X, last.Y, last.resultForNextPlayer);
+                    }
+                }
+
+                GetGameStateMotor();
+            }
         }
 
         //===============================
@@ -262,7 +288,7 @@ namespace Client2
             // Отправляем запрос на отключение клиента
             // Отправить запрос на отключение клиента на сервер
             string disconnectMessage = "disconnect"; // Здесь может быть любое сообщение, которое сервер будет распознавать как запрос на отключение
-            SendMessageToServer(disconnectMessage);
+            SendMessageToServer(disconnectMessage); 
         }
         private void btnSend_Click(object sender, EventArgs e)
         {
@@ -514,7 +540,21 @@ namespace Client2
         #region РЕЖИМ АТАКИ
         private void InitOpponentSea()
         {
-            OpponentSea.Enabled = true;
+            if (OpponentSea.InvokeRequired)
+            {
+                OpponentSea.Invoke((MethodInvoker)delegate 
+                { 
+                    OpponentSea.Enabled = true;
+                    OpponentSea.ColumnCount = 10;
+                    OpponentSea.RowCount = 10;
+                });
+                
+            }
+            else
+            {
+                OpponentSea.Enabled = true;
+            }
+
         }
         private async void AttackOpponentCell(int selectedCellX, int selectedCellY)
         {
@@ -537,7 +577,11 @@ namespace Client2
             attackedCellY = int.Parse(tokens[2]);
             isHit = tokens[0] == "you_shot";
 
-            OpponentSea.Enabled = isHit;
+            if (OpponentSea.InvokeRequired)
+            {
+                OpponentSea.Invoke((MethodInvoker)delegate { OpponentSea.Enabled = isHit; });
+            }
+            else OpponentSea.Enabled = isHit;
 
             // Окрашивание клетки на поле пользователя или противника в зависимости от результата атаки
             if (isHit)
