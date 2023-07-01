@@ -238,7 +238,7 @@ namespace Client2
         /// <summary>
         /// Актуализирует клиента под состояние игры на сервер
         /// </summary>
-        /// <param name="GameStateJSON"></param>
+        /// <param name="GameStateBIN"></param>
         private void ProcessGameState(string GameState)
         {
             ////Player player = JsonConvert.DeserializeObject<Player>(GameStateJSON);
