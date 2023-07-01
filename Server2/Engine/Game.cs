@@ -92,7 +92,7 @@ namespace Server2.Engine
             if (targetCell.State == SeaCell.CellState.OccupiedByShip)
             {
                 // Получение объекта Ship, находящегося на атакованной клетке
-                Ship targetShip = opponent.PlayerSea.Ships.Find(ship => ship.ShipCells.Contains(targetCell));
+                Ship targetShip = opponent.PlayerSea.Ships.Find(ship => ship.ContainsCell(targetCell));
 
                 // Нанесение повреждения кораблю
                 targetShip.Damage();
