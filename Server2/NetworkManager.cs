@@ -330,14 +330,14 @@ namespace Server2
             if (isHit)
             {
                 thisGame.CurrentPlayer = thisPlayer; // Ход остается у текущего клиента
-                return "you_shot";
+                return ("you_shot,"+coordinates);
             }
             else
             {
                 // Ход передается оппоненту
                 thisGame.ChangePlayer();
 
-                return "you_fail";
+                return ("you_fail,"+coordinates);
             }
         }
 

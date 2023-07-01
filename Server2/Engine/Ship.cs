@@ -34,5 +34,13 @@ namespace Server2.Engine
                 IsDestructed = true;
             }
         }
+        public bool ContainsCell(SeaCell cell)
+        {
+            foreach(SeaCell c in ShipCells)
+            {
+                if (c.X == cell.X && c.Y == cell.Y && c.State == cell.State) return true;
+            }
+            return false;
+        }
     }
 }
