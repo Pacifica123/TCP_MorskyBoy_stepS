@@ -24,7 +24,7 @@ namespace Server2.Engine
         [ProtoMember(6)]
         public bool GameOver { get; set; }
         [ProtoMember(7)]
-        public Turn? LastTurn { get; set; }
+        public Turn LastTurn { get; set; }
 
 
    
