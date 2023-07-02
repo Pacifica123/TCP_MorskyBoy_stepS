@@ -210,13 +210,13 @@ namespace Client2
                 //case string result when result.StartsWith("OpponentAttackResult"):
                 //    ProcessOpponentAttackResult(result);
                 //    break;
-                case "NotAlready":
-                    // снова ждем но уже когда сходит пртивник
-                    //ToolTip waiting = new ToolTip();
-                    //waiting.Show("Ждем ответа оппонента...", OpponentSea);
-                    WaitForServerResponse();
-                    break;
-                //case string result when result.Contains("STATE"):
+                //case "NotAlready":
+                //    // снова ждем но уже когда сходит пртивник
+                //    //ToolTip waiting = new ToolTip();
+                //    //waiting.Show("Ждем ответа оппонента...", OpponentSea);
+                //    WaitForServerResponse();
+                //    break;
+                ////case string result when result.Contains("STATE"):
                 //    string base64Data = result.Substring("STATE".Length);
                 //    //byte[] decodedBytes = Convert.FromBase64String(base64Data);
                 //    //string decodedString = Convert.ToBase64String(decodedBytes);
