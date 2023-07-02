@@ -123,40 +123,44 @@ namespace Server2
                 // ход атакующего
                 case var attackMessage when attackMessage.StartsWith("Attack:"):
                     string coordinates = attackMessage.Substring("Attack:".Length);
-                    return ("AttackResult"+ProcessAttack(coordinates, client));
+                    ProcessAttack(coordinates, client);
+                    //return ("AttackResult"+ProcessAttack(coordinates, client));
+                    return "";
                 // периодический спрос атакуемого
-                case "OpponentAlreadyAtacked?":
-                    Player thisPlayer = FindPlayerById(id);
-                    return ProcessAttackForOpponent(FindGameById(thisPlayer.GameId));
+                //case "OpponentAlreadyAtacked?":
+                //    Player thisPlayer = FindPlayerById(id);
+                //    return ProcessAttackForOpponent(FindGameById(thisPlayer.GameId));
                 case "disconnect":
                     RemovePlayer(id);
                     return ""; //игроку уже ничто не нужно после отключения
-                case "get_state":
-                    return (GetStateBin_String(id));
+                //case "get_state":
+                //    return (GetStateBin_String(id));
+                case "get_last":
+                    return ("LastTurn:" + JsonConvert.SerializeObject(FindGameById(FindPlayerById(id).GameId).LastTurn));
                 // непонятная дичь
                 default:
                     return "Default";
             }
         }
-        private string GetStateBin_String(string id)
-        {
-            Game thisGame = FindGameById(FindPlayerById(id).GameId);
-            Console.WriteLine($"Игрок {id} запросил текущее состояние игры");
+        //private string GetStateBin_String(string id)
+        //{
+        //    Game thisGame = FindGameById(FindPlayerById(id).GameId);
+        //    Console.WriteLine($"Игрок {id} запросил текущее состояние игры");
 
-            using (MemoryStream stream = new MemoryStream())
-            {
-                Serializer.Serialize(stream, thisGame);
-                byte[] serializedData = stream.ToArray();
-                string stateString = "STATE" + Convert.ToBase64String(serializedData);
-                return stateString;
-            }
-        }
-        private string GetStateJSON(string id)
-        {
-            Game thisGame = FindGameById(FindPlayerById(id).GameId);
-            Console.WriteLine($"Игрок {id} запросил текущее состояние игры");
-            return JsonConvert.SerializeObject(thisGame);
-        }
+        //    using (MemoryStream stream = new MemoryStream())
+        //    {
+        //        Serializer.Serialize(stream, thisGame);
+        //        byte[] serializedData = stream.ToArray();
+        //        string stateString = "STATE" + Convert.ToBase64String(serializedData);
+        //        return stateString;
+        //    }
+        //}
+        //private string GetStateJSON(string id)
+        //{
+        //    Game thisGame = FindGameById(FindPlayerById(id).GameId);
+        //    Console.WriteLine($"Игрок {id} запросил текущее состояние игры");
+        //    return JsonConvert.SerializeObject(thisGame);
+        //}
 
         private void RemovePlayer(string id)
         {
@@ -171,22 +175,22 @@ namespace Server2
         /// </summary>
         /// <returns>информацию о том, попал ли оппонент и куда в формате "opponent_*,X,Y"</returns>
         /// <exception cref="NotImplementedException"></exception>
-        private string ProcessAttackForOpponent(Game game)
-        {
-            string answer = "OpponentAttackResult:";
-            if (game.LastTurn != null || game.LastTurn.resultForNextPlayer == null)
-            {
-                answer += game.LastTurn.resultForNextPlayer; //tokens[0]
-            }
-            else
-            {
-                answer += "NotAlready"; //tokens[0]
-            } 
+        //private string ProcessAttackForOpponent(Game game)
+        //{
+        //    string answer = "OpponentAttackResult:";
+        //    if (game.LastTurn != null || game.LastTurn.resultForNextPlayer == null)
+        //    {
+        //        answer += game.LastTurn.resultForNextPlayer; //tokens[0]
+        //    }
+        //    else
+        //    {
+        //        answer += "NotAlready"; //tokens[0]
+        //    } 
             
-            answer += "," + game.LastTurn.X.ToString(); //tokens[1]
-            answer += "," + game.LastTurn.Y.ToString(); //tokens[2]
-            return answer;
-        }
+        //    answer += "," + game.LastTurn.X.ToString(); //tokens[1]
+        //    answer += "," + game.LastTurn.Y.ToString(); //tokens[2]
+        //    return answer;
+        //}
 
         /// <summary>
         /// Расстановка кораблей для игрока
@@ -314,30 +318,30 @@ namespace Server2
 
             return ipAddress;
         }
-        private string ProcessAttack(string coordinates, TcpClient client)
+        private void ProcessAttack(string coordinates, TcpClient client)
         {
             string id = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
             Player thisPlayer = FindPlayerById(id);
             Game thisGame = FindGameById(thisPlayer.GameId);
             // Проверка правила чередования хода
-            if (thisGame.CurrentPlayer != FindPlayerById(id)) 
-            {
-                return "NotYourTurn"; // Возвращаем сообщение, что сейчас не ваш ход
-            }
+            //if (thisGame.CurrentPlayer != FindPlayerById(id)) 
+            //{
+            //    return "NotYourTurn"; // Возвращаем сообщение, что сейчас не ваш ход
+            //}
 
             // Обработка атаки на сервер
             bool isHit = thisGame.CheckAttack(coordinates); // Проверяем атаку на попадание
             if (isHit)
             {
                 thisGame.CurrentPlayer = thisPlayer; // Ход остается у текущего клиента
-                return ("you_shot,"+coordinates);
+                //return ("you_shot,"+coordinates);
             }
             else
             {
                 // Ход передается оппоненту
                 thisGame.ChangePlayer();
 
-                return ("you_fail,"+coordinates);
+                //return ("you_fail,"+coordinates);
             }
         }
 

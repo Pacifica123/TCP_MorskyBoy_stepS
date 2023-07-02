@@ -103,7 +103,7 @@ namespace Client2
                             ipServer = ipAddress;
                         }
                     }
-                    GetGameStateMotor();
+                    //GetGameStateMotor();
                 }
                 catch (Exception ex)
                 {
@@ -120,9 +120,8 @@ namespace Client2
         /// </summary>
         private async void GetGameStateMotor()
         { 
-                await Task.Delay(3000);
-                SendMessageToServer("get_state");
-
+                await Task.Delay(1000);
+                SendMessageToServer("get_last");
         }
          
         private bool IsValidIpAddress(string ipAddress)
@@ -205,75 +204,88 @@ namespace Client2
                 case string result when result.StartsWith("GameStarted"):
                     ClientGameTransformation(result.Substring("GameStarted:".Length));
                     break;
-                case string result when result.StartsWith("AttackResult"):
-                    ProcessAttackResult(result.Substring("AttackResult".Length));
-                    break;
+                //case string result when result.StartsWith("AttackResult"):
+                //    ProcessAttackResult(result.Substring("AttackResult".Length));
+                //    break;
                 //case string result when result.StartsWith("OpponentAttackResult"):
                 //    ProcessOpponentAttackResult(result);
                 //    break;
                 case "NotAlready":
                     // снова ждем но уже когда сходит пртивник
-                    ToolTip waiting = new ToolTip();
-                    waiting.Show("Ждем ответа оппонента...", OpponentSea);
+                    //ToolTip waiting = new ToolTip();
+                    //waiting.Show("Ждем ответа оппонента...", OpponentSea);
                     WaitForServerResponse();
                     break;
-                case string result when result.Contains("STATE"):
-                    string base64Data = result.Substring("STATE".Length);
-                    //byte[] decodedBytes = Convert.FromBase64String(base64Data);
-                    //string decodedString = Convert.ToBase64String(decodedBytes);
-                    //ProcessGameState(decodedString);
-                    ProcessGameState(base64Data);
-                    break;
-                case "NotYourTurn":
-                    MessageBox.Show("Сейчас не ваш ход!");
+                //case string result when result.Contains("STATE"):
+                //    string base64Data = result.Substring("STATE".Length);
+                //    //byte[] decodedBytes = Convert.FromBase64String(base64Data);
+                //    //string decodedString = Convert.ToBase64String(decodedBytes);
+                //    //ProcessGameState(decodedString);
+                //    ProcessGameState(base64Data);
+                //    break;
+                //case "NotYourTurn":
+                //    MessageBox.Show("Сейчас не ваш ход!");
+                //    break;
+                case string result when result.Contains("LastTurn:"):
+                    ProcessLastTurn(result.Substring("LastTurn:".Length));
                     break;
                 case "Good!":
                     break;
+                case "":
+                    break; //заглушка пока на закомментированные методы на Сервере
                 default:
                     // Обработка неизвестного ответа
                     MessageBox.Show("Что-то пошло не так!");
                     break;
             }
         }
+
+        private void ProcessLastTurn(string turn)
+        {
+            Turn last = JsonConvert.DeserializeObject<Turn>(turn);
+
+            //TODO: адаптация клиента под последний ход
+            if (last == null) { MessageBox.Show("Происходит какая-то ошибка!"); return; }
+            if (last.AtackedPlayerID != null && last.AtackerID != null)
+            {
+                // здесь resultForNextPlayer это противник - красим его поле
+                if (last.AtackerID == MyIP.ToString()) ProcessAttackResult(last.X, last.Y, last.resultForNextPlayer);
+                // здесь resultForNextPlayer - это мы - красим наше поле:
+                if (last.AtackedPlayerID == MyIP.ToString()) ProcessOpponentAttackResult(last.X, last.Y, last.resultForNextPlayer);
+            }
+
+
+            GetGameStateMotor();
+        }
+
         /// <summary>
         /// Актуализирует клиента под состояние игры на сервер
         /// </summary>
         /// <param name="GameStateBIN"></param>
-        private void ProcessGameState(string GameState)
-        {
-            ////Player player = JsonConvert.DeserializeObject<Player>(GameStateJSON);
-            //Game currentGameState = JsonConvert.DeserializeObject<Game>(GameStateJSON, new JsonSerializerSettings());
-            //if (currentGameState.Players.Count == 2 && currentGameState.GameStarted)
-            //    OpponentSea.Enabled = currentGameState.CurrentPlayer.PlayerId == MyIP.ToString(); //разрешено ли ходить пользователю
-            //if (currentGameState.LastTurn != null)
-            //{
-            //    if (currentGameState.LastTurn.AtackedPlayer.PlayerId == MyIP.ToString())
-            //    {
-            //        Turn last = currentGameState.LastTurn;
-            //        ProcessOpponentAttackResult(last.X, last.Y, last.resultForNextPlayer);
-            //    }
-            //}
-            byte[] serializedData = Convert.FromBase64String(GameState);
+        //private void ProcessGameState(string GameState)
+        //{
 
-            using (MemoryStream stream = new MemoryStream(serializedData))
-            {
-                Game currentGameState = Serializer.Deserialize<Game>(stream);
+        //    byte[] serializedData = Convert.FromBase64String(GameState);
 
-                if (currentGameState.Players.Count == 2 && currentGameState.GameStarted)
-                    OpponentSea.Enabled = currentGameState.CurrentPlayer.PlayerId == MyIP.ToString();
+        //    using (MemoryStream stream = new MemoryStream(serializedData))
+        //    {
+        //        Game currentGameState = Serializer.Deserialize<Game>(stream);
 
-                if (currentGameState.LastTurn != null)
-                {
-                    if (currentGameState.LastTurn.AtackedPlayer.PlayerId == MyIP.ToString())
-                    {
-                        Turn last = currentGameState.LastTurn;
-                        ProcessOpponentAttackResult(last.X, last.Y, last.resultForNextPlayer);
-                    }
-                }
+        //        if (currentGameState.Players.Count == 2 && currentGameState.GameStarted)
+        //            OpponentSea.Enabled = currentGameState.CurrentPlayer.PlayerId == MyIP.ToString();
 
-                GetGameStateMotor();
-            }
-        }
+        //        if (currentGameState.LastTurn != null)
+        //        {
+        //            if (currentGameState.LastTurn.AtackedPlayer.PlayerId == MyIP.ToString())
+        //            {
+        //                Turn last = currentGameState.LastTurn;
+        //                ProcessOpponentAttackResult(last.X, last.Y, last.resultForNextPlayer);
+        //            }
+        //        }
+
+        //       // GetGameStateMotor();
+        //    }
+        //}
 
         //===============================
         #endregion
@@ -395,7 +407,7 @@ namespace Client2
             if (isGameStarted)
             {
                 AttackOpponentCell(e.ColumnIndex, e.RowIndex);
-               
+                SendMessageToServer("get_last"); //внеочередной спрос для ускорения??
             }
         }
         //--------------------------------------------------
@@ -534,8 +546,9 @@ namespace Client2
             else
             {
                 MessageBox.Show("Право первого хода...Досталось оппоненту.");
-                SendMessageToServer("OpponentAlreadyAtacked?");
+                //SendMessageToServer("OpponentAlreadyAtacked?");
             }
+            GetGameStateMotor();
         }
         #region РЕЖИМ АТАКИ
         private void InitOpponentSea()
@@ -566,16 +579,16 @@ namespace Client2
         /// Результат нашей атаки
         /// </summary>
         /// <param name="result"></param>
-        private void ProcessAttackResult(string result)
+        private void ProcessAttackResult(int X, int Y, string AtackResult)
         {
             int attackedCellX, attackedCellY;
             bool isHit;
 
             // Разбор ответа сервера
-            string[] tokens = result.Split(',');
-            attackedCellX = int.Parse(tokens[1]);
-            attackedCellY = int.Parse(tokens[2]);
-            isHit = tokens[0] == "you_shot";
+            //string[] tokens = result.Split(',');
+            attackedCellX = X;
+            attackedCellY = Y;
+            isHit = AtackResult == "shot";
 
             if (OpponentSea.InvokeRequired)
             {
@@ -602,35 +615,35 @@ namespace Client2
         /// результат атаки противника по нашему полю
         /// </summary>
         /// <param name="result"></param>
-        private void ProcessOpponentAttackResult(string result)
-        {
-            result = result.Substring("OpponentAttackResult:".Length);
-            int attackedCellX, attackedCellY;
-            bool isHit;
+        //private void ProcessOpponentAttackResult(int X, int Y, string AtackResult)
+        //{
+        //    result = result.Substring("OpponentAttackResult:".Length);
+        //    int attackedCellX, attackedCellY;
+        //    bool isHit;
 
-            // Разбор ответа сервера
-            string[] tokens = result.Split(',');
-            attackedCellX = int.Parse(tokens[1]);
-            attackedCellY = int.Parse(tokens[2]);
-            isHit = tokens[0] == /*"you_fail" || tokens[0] ==*/ "opponent_shot";
+        //    // Разбор ответа сервера
+        //    string[] tokens = result.Split(',');
+        //    attackedCellX = int.Parse(tokens[1]);
+        //    attackedCellY = int.Parse(tokens[2]);
+        //    isHit = tokens[0] == /*"you_fail" || tokens[0] ==*/ "opponent_shot";
 
-            // Окрашивание клетки на поле пользователя в зависимости от результата атаки
-            if (isHit)
-            {
-                DataGridViewCell cell = YourSea.Rows[attackedCellY].Cells[attackedCellX];
-                cell.Style.BackColor = Color.Black;
+        //    // Окрашивание клетки на поле пользователя в зависимости от результата атаки
+        //    if (isHit)
+        //    {
+        //        DataGridViewCell cell = YourSea.Rows[attackedCellY].Cells[attackedCellX];
+        //        cell.Style.BackColor = Color.Black;
 
-            }
-            else
-            {
-                DataGridViewCell cell = YourSea.Rows[attackedCellY].Cells[attackedCellX];
-                cell.Style.BackColor = Color.Blue;
-            }
-        }
+        //    }
+        //    else
+        //    {
+        //        DataGridViewCell cell = YourSea.Rows[attackedCellY].Cells[attackedCellX];
+        //        cell.Style.BackColor = Color.Blue;
+        //    }
+        //}
         private void ProcessOpponentAttackResult(int X, int Y, string result)
         {
 
-            bool isHit = result == "opponent_shot";
+            bool isHit = result == "shot";
 
             // Окрашивание клетки на поле пользователя в зависимости от результата атаки
             if (isHit)
@@ -643,8 +656,9 @@ namespace Client2
             {
                 DataGridViewCell cell = YourSea.Rows[Y].Cells[X];
                 cell.Style.BackColor = Color.Aqua;
-
+                
             }
+            OpponentSea.Enabled = !isHit; //если противник промахнулся - право хода передается этому пользователю
         }
 
         #endregion
