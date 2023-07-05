@@ -41,7 +41,6 @@ namespace Client2
 
         // Глобальные переменные
         private bool isGameStarted = false;
-        private bool isUserFieldEditable = true;
         private Ship currentShip; // Текущий корабль
         static string ipServer; // Конечная точка подключения
         List<Ship> Ships_buffer = new List<Ship>(); // Буферный список для отправки кораблей на сервер
@@ -252,6 +251,7 @@ namespace Client2
                 if (last.AtackerID == MyIP.ToString()) ProcessAttackResult(last.X, last.Y, last.resultForNextPlayer);
                 // здесь resultForNextPlayer - это мы - красим наше поле:
                 if (last.AtackedPlayerID == MyIP.ToString()) ProcessOpponentAttackResult(last.X, last.Y, last.resultForNextPlayer);
+                //TODO: добавить в ЛастХод кол-во кораблей или другой индикатор окончания игры
             }
 
 
@@ -313,7 +313,7 @@ namespace Client2
             // Отправка сообщения на сервер
             SendMessageToServer(message);
 
-
+            this.Enabled = false;
         }
         private void YourSea_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
@@ -410,9 +410,108 @@ namespace Client2
                 SendMessageToServer("get_last"); //внеочередной спрос для ускорения??
             }
         }
+
+        private void btnRandomPlacement_Click(object sender, EventArgs e)
+        {
+            Random random = new Random();
+            // Очищаем поле перед расстановкой
+            //YourSea.Rows.Clear();
+            YourSea.Refresh();
+
+            // Расставляем корабли случайным образом
+            List<Ship> shipBufferCopy = new List<Ship>(shipBuffer);
+            foreach (Ship ship in shipBufferCopy)
+            {
+                bool placed = false;
+
+                while (!placed)
+                {
+                    int x = random.Next(YourSea.ColumnCount);
+                    int y = random.Next(YourSea.RowCount);
+                    bool isVertical = random.Next(2) == 0;
+                    SeaCell startCell = new SeaCell(x, y, SeaCell.CellState.OccupiedByShip);
+                    ship.ShipCells = (List<SeaCell>)GetShipCells(ship, startCell, isVertical);
+
+                    if (CanPlaceShip(ship, x, y, isVertical) && !IsShipColliding(ship))
+                    {
+                        PlaceShip(ship, x, y, isVertical);
+                        placed = true;
+                    }
+                }
+            }
+
+            // Обновляем состояние кнопок
+            UpdateButtonStates();
+        }
         //--------------------------------------------------
         // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
         //--------------------------------------------------
+        private void PlaceShip(Ship ship, int startX, int startY, bool isVertical)
+        {
+            // Добавляем корабль в буфер и удаляем его из списка кораблей
+            Ships_buffer.Add(ship);
+            shipBuffer.Remove(ship);
+            // Окрашиваем ячейки корабля в другой цвет
+            foreach (SeaCell cell in ship.ShipCells)
+            {
+                int x = startX + (cell.X-startX);
+                int y = startY + (cell.Y-startY);
+                YourSea.Rows[y].Cells[x].Style.BackColor = Color.Gray;
+            }
+
+            // Обновляем состояние кнопок
+            UpdateButtonStates();
+        }
+        public bool CanPlaceShip(Ship ship, int startX, int startY, bool isVertical)
+        {
+            SeaCell startCell = new SeaCell(startX, startY, SeaCell.CellState.OccupiedByShip);
+            // Проверяем, не выходит ли корабль за границы поля
+            if (isVertical)
+            {
+                if (startCell.Y + ship.Type >= YourSea.RowCount ) 
+                    return false;
+            }
+            else
+            {
+                if (startCell.X + ship.Type >= YourSea.ColumnCount )
+                    return false;
+            }
+
+            // Проверяем, не перекрывает ли корабль другие корабли
+            foreach (SeaCell cell in ship.ShipCells)
+            {
+                int x = startX + cell.X;
+                int y = startY + cell.Y;
+
+                if (x >= 0 && x < YourSea.ColumnCount && y >= 0 && y < YourSea.RowCount)
+                {
+                    if (YourSea.Rows[y].Cells[x].Style.BackColor == Color.Gray)
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        private IEnumerable<SeaCell> GetShipCells(Ship ship, SeaCell startCell, bool isVertical)
+        {
+            List<SeaCell> cells = new List<SeaCell>();
+
+            for (int i = 0; i < ship.Type; i++)
+            {
+                int x = startCell.X;
+                int y = startCell.Y;
+
+                if (isVertical)
+                    y += i;
+                else
+                    x += i;
+
+                cells.Add(new SeaCell(x, y, SeaCell.CellState.OccupiedByShip));
+            }
+
+            return cells;
+        }
         private void MoveTo(Ship currentShip, int rowIndex, int columnIndex)
         {
             // Очистить предыдущие координаты корабля
@@ -466,6 +565,7 @@ namespace Client2
             btnConfirm.Enabled = hasShipPlacement;
             btnCancel.Enabled = hasShipPlacement;
             btnDisconnect.Enabled = hasShipPlacement;
+            
         }
 
         private void UpdateGridView()
@@ -491,7 +591,6 @@ namespace Client2
                     cell.Style.BackColor = Color.LightGray;
                 }
             }
-           // YourSea.Enabled = !isUserFieldEditable;
         }
         /// <summary>
         /// Этот корабль конфликтует хотя с одним из уже выставленных?
@@ -532,7 +631,6 @@ namespace Client2
         private void ClientGameTransformation(string WhosTurn)
         {
             isGameStarted = true;
-            isUserFieldEditable = false;
             MessageBox.Show("Игра началась");
 
             // Включить и отрисовать поле противника
@@ -658,13 +756,22 @@ namespace Client2
                 cell.Style.BackColor = Color.Aqua;
                 
             }
-            OpponentSea.Enabled = !isHit; //если противник промахнулся - право хода передается этому пользователю
+            if (OpponentSea.InvokeRequired)
+            {
+                OpponentSea.Invoke((MethodInvoker)delegate
+                { OpponentSea.Enabled = true;});
+
+            }
+            else
+            {
+                OpponentSea.Enabled = true;
+            }
         }
 
-        #endregion
 
         #endregion
 
+        #endregion
 
     }
 }

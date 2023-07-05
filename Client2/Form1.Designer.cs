@@ -38,6 +38,7 @@
             this.btnDisconnect = new System.Windows.Forms.Button();
             this.btnSend = new System.Windows.Forms.Button();
             this.OpponentSea = new System.Windows.Forms.DataGridView();
+            this.btnRandomPlacement = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.YourSea)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.OpponentSea)).BeginInit();
             this.SuspendLayout();
@@ -160,11 +161,22 @@
             this.OpponentSea.TabIndex = 9;
             this.OpponentSea.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.OpponentSea_CellDoubleClick);
             // 
+            // btnRandomPlacement
+            // 
+            this.btnRandomPlacement.Location = new System.Drawing.Point(13, 280);
+            this.btnRandomPlacement.Name = "btnRandomPlacement";
+            this.btnRandomPlacement.Size = new System.Drawing.Size(75, 23);
+            this.btnRandomPlacement.TabIndex = 10;
+            this.btnRandomPlacement.Text = "Рандом?";
+            this.btnRandomPlacement.UseVisualStyleBackColor = true;
+            this.btnRandomPlacement.Click += new System.EventHandler(this.btnRandomPlacement_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.btnRandomPlacement);
             this.Controls.Add(this.OpponentSea);
             this.Controls.Add(this.btnSend);
             this.Controls.Add(this.btnDisconnect);
@@ -197,6 +209,7 @@
         private System.Windows.Forms.Button btnDisconnect;
         private System.Windows.Forms.Button btnSend;
         private System.Windows.Forms.DataGridView OpponentSea;
+        private System.Windows.Forms.Button btnRandomPlacement;
     }
 }
 

@@ -112,6 +112,7 @@ namespace Server2.Engine
             return false; // Атака неудачна (промах)
         }
     }
+    //TODO: добавить в ЛастХод кол-во кораблей или другой индикатор окончания игры
     [ProtoContract]
     public class Turn
     {
