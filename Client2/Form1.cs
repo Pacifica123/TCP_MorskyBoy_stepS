@@ -41,6 +41,7 @@ namespace Client2
 
         // Глобальные переменные
         private bool isGameStarted = false;
+        private bool isGameOver = false;
         private Ship currentShip; // Текущий корабль
         static string ipServer; // Конечная точка подключения
         List<Ship> Ships_buffer = new List<Ship>(); // Буферный список для отправки кораблей на сервер
@@ -119,6 +120,7 @@ namespace Client2
         /// </summary>
         private async void GetGameStateMotor()
         { 
+                if (isGameOver) { return; }
                 await Task.Delay(2000);
                 SendMessageToServer("get_last");
         }
@@ -144,6 +146,11 @@ namespace Client2
                     string response = await Task.Run(() => ReceiveMessageFromServer(stream));
 
                     // Обработка ответа от сервера
+                    if (isGameOver)
+                    {
+                        client.Client.Close();
+                        return;
+                    }
                     await HandleServerResponse(response); //(там итак await внутри)
                 }
             }
@@ -226,6 +233,7 @@ namespace Client2
                 //    MessageBox.Show("Сейчас не ваш ход!");
                 //    break;
                 case string result when result.Contains("LastTurn:"):
+                    if (isGameOver) return;
                     ProcessLastTurn(result.Substring("LastTurn:".Length));
                     break;
                 case "Good!":
@@ -261,7 +269,7 @@ namespace Client2
 
             }
 
-
+            if (isGameOver) return;
             GetGameStateMotor();
         }
 
@@ -283,7 +291,7 @@ namespace Client2
             {
                 MessageBox.Show("Игра окончена.\nВы проиграли =(");
             }
-
+            isGameOver = true; 
         }
 
         /// <summary>

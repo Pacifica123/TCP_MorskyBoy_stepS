@@ -42,6 +42,7 @@ namespace Server2.Engine
         }
         private bool CheckAllShipsDestructed(List<Ship> SeaOfShips)
         {
+            if (SeaOfShips == null || SeaOfShips.Count == 0) return false;
             foreach (Ship ship in SeaOfShips)
             {
                 if (ship.IsDestructed == false) return false;
