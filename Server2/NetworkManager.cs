@@ -91,7 +91,7 @@ namespace Server2
             while (client.Connected && (bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
             {
                 string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                string response = ProcessMessage(message, client);
+                string response = ProcessMessage(message, client); 
 
                 byte[] responseBytes = Encoding.UTF8.GetBytes(response);
                 stream.Write(responseBytes, 0, responseBytes.Length);
