@@ -313,7 +313,6 @@ namespace Client2
             // Отправка сообщения на сервер
             SendMessageToServer(message);
 
-            this.Enabled = false;
         }
         private void YourSea_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
