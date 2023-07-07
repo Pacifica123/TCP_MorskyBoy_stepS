@@ -128,7 +128,7 @@ namespace Server2.Engine
         public string resultForNextPlayer { get; set; } //fail или shot - результат для текущего игрока
         public Turn()
         {
-            resultForNextPlayer = "NotAlredy";
+            //resultForNextPlayer = "NotAlredy";
         }
     }
 }

@@ -119,7 +119,7 @@ namespace Client2
         /// </summary>
         private async void GetGameStateMotor()
         { 
-                await Task.Delay(1000);
+                await Task.Delay(2000);
                 SendMessageToServer("get_last");
         }
          
@@ -245,7 +245,7 @@ namespace Client2
 
             //TODO: адаптация клиента под последний ход
             if (last == null) { MessageBox.Show("Происходит какая-то ошибка!"); return; }
-            if (last.AtackedPlayerID != null && last.AtackerID != null)
+            if (last.AtackedPlayerID != null && last.AtackerID != null && (last.resultForNextPlayer != "" || last.resultForNextPlayer != "NotAlredy"))
             {
                 // здесь resultForNextPlayer это противник - красим его поле
                 if (last.AtackerID == MyIP.ToString()) ProcessAttackResult(last.X, last.Y, last.resultForNextPlayer);
