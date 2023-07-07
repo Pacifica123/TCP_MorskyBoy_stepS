@@ -16,10 +16,12 @@ namespace Server2
     {
         private List<Game> games;
         private int GAME_ID_COUNTER = 0;
+        private GameManager manager;
 
         public NetworkManager()
         {
             games = new List<Game>();
+            manager = new GameManager();
         }
         /// <summary>
         /// Весь общий процесс работы сервера
@@ -75,7 +77,6 @@ namespace Server2
                     }
                 }
                 Task.Run(() => ProcessClient(client));
-                
             }
         }
         /// <summary>
@@ -109,6 +110,7 @@ namespace Server2
         {
             // Обработка полученного сообщения и возвращение ответа
             string id = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+            manager.CheckGameOver(FindGameById(FindPlayerById(id).GameId));
             switch (message)
             {
                 // подключени
@@ -141,7 +143,6 @@ namespace Server2
                 default:
                     return "Default";
             }
-            
         }
         //private string GetStateBin_String(string id)
         //{

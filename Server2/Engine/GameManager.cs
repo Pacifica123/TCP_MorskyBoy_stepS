@@ -14,7 +14,7 @@ namespace Server2.Engine
             game.GameStarted = true;
         }
 
-        public void EndGame(Game game, Player win)
+        private void EndGame(Game game, Player win)
         {
             game.GameOver = true;
             game.LastTurn.resultForNextPlayer = "WIN:" + win.PlayerId;
@@ -40,7 +40,7 @@ namespace Server2.Engine
             return false;
 
         }
-        public bool CheckAllShipsDestructed(List<Ship> SeaOfShips)
+        private bool CheckAllShipsDestructed(List<Ship> SeaOfShips)
         {
             foreach (Ship ship in SeaOfShips)
             {

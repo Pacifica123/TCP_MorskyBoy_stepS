@@ -267,7 +267,14 @@ namespace Client2
 
         private void ProcessFinal(string winnerIP)
         {
-            this.Enabled = false;
+            if (this.InvokeRequired)
+            {
+                this.Invoke((MethodInvoker)delegate
+                {
+                    this.Enabled = false;
+                });
+            }
+            else this.Enabled = false;
             if (winnerIP == MyIP.ToString())
             {
                 MessageBox.Show("Поздравляем!\nВы победили!");
