@@ -120,9 +120,12 @@ namespace Client2
         /// </summary>
         private async void GetGameStateMotor()
         { 
-                if (isGameOver) { return; }
-                await Task.Delay(2000);
-                SendMessageToServer("get_last");
+            if (isGameOver) 
+            { 
+                return; 
+            }
+            await Task.Delay(2000);
+            SendMessageToServer("get_last");
         }
          
         private bool IsValidIpAddress(string ipAddress)
@@ -186,8 +189,10 @@ namespace Client2
         {
             await Task.Run(() =>
             {
+                
                 ProcessServerResponse(response);
             });
+            
         }
         /// <summary>
         /// Механизм обработки сервера (ядро HandleServerRespons-а)
