@@ -245,17 +245,38 @@ namespace Client2
 
             //TODO: адаптация клиента под последний ход
             if (last == null) { MessageBox.Show("Происходит какая-то ошибка!"); return; }
+            if (last.resultForNextPlayer != null && last.resultForNextPlayer.StartsWith("WIN:"))
+            {
+                ProcessFinal(last.resultForNextPlayer.Substring("WIN:".Length));
+                return;
+            }
             if (last.AtackedPlayerID != null && last.AtackerID != null && (last.resultForNextPlayer != "" || last.resultForNextPlayer != "NotAlredy"))
             {
                 // здесь resultForNextPlayer это противник - красим его поле
                 if (last.AtackerID == MyIP.ToString()) ProcessAttackResult(last.X, last.Y, last.resultForNextPlayer);
                 // здесь resultForNextPlayer - это мы - красим наше поле:
                 if (last.AtackedPlayerID == MyIP.ToString()) ProcessOpponentAttackResult(last.X, last.Y, last.resultForNextPlayer);
+                
                 //TODO: добавить в ЛастХод кол-во кораблей или другой индикатор окончания игры
+
             }
 
 
             GetGameStateMotor();
+        }
+
+        private void ProcessFinal(string winnerIP)
+        {
+            this.Enabled = false;
+            if (winnerIP == MyIP.ToString())
+            {
+                MessageBox.Show("Поздравляем!\nВы победили!");
+            }
+            else
+            {
+                MessageBox.Show("Игра окончена.\nВы проиграли =(");
+            }
+
         }
 
         /// <summary>
@@ -753,18 +774,19 @@ namespace Client2
             {
                 DataGridViewCell cell = YourSea.Rows[Y].Cells[X];
                 cell.Style.BackColor = Color.Aqua;
-                
-            }
-            if (OpponentSea.InvokeRequired)
-            {
-                OpponentSea.Invoke((MethodInvoker)delegate
-                { OpponentSea.Enabled = true;});
 
+                if (OpponentSea.InvokeRequired)
+                {
+                    OpponentSea.Invoke((MethodInvoker)delegate
+                    { OpponentSea.Enabled = true; });
+
+                }
+                else
+                {
+                    OpponentSea.Enabled = true;
+                }
             }
-            else
-            {
-                OpponentSea.Enabled = true;
-            }
+            
         }
 
 
