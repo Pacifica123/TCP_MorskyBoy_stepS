@@ -139,22 +139,25 @@ namespace Client2
         // Отправка сообщения на сервер
         private async void SendMessageToServer(string message)
         {
-            using (TcpClient client = new TcpClient(ipServer, 8888))
+            if (isGameOver)
             {
-                using (NetworkStream stream = client.GetStream())
+                using (TcpClient client = new TcpClient(ipServer, 8888))
                 {
-                    byte[] data = Encoding.UTF8.GetBytes(message);
-                    await Task.Run(() => stream.Write(data, 0, data.Length));
-                    // Получение ответа от сервера
-                    string response = await Task.Run(() => ReceiveMessageFromServer(stream));
-
-                    // Обработка ответа от сервера
-                    if (isGameOver)
+                    using (NetworkStream stream = client.GetStream())
                     {
-                        client.Client.Close();
-                        return;
+                        byte[] data = Encoding.UTF8.GetBytes(message);
+                        await Task.Run(() => stream.Write(data, 0, data.Length));
+                        // Получение ответа от сервера
+                        string response = await Task.Run(() => ReceiveMessageFromServer(stream));
+
+                        // Обработка ответа от сервера
+                        if (isGameOver)
+                        {
+                            client.Client.Close();
+                            return;
+                        }
+                        await HandleServerResponse(response); //(там итак await внутри)
                     }
-                    await HandleServerResponse(response); //(там итак await внутри)
                 }
             }
         }
@@ -187,11 +190,15 @@ namespace Client2
         /// <returns>Действие в зависимости от ответа сервера</returns>
         private async Task HandleServerResponse(string response)
         {
-            await Task.Run(() =>
+            if (isGameOver)
             {
-                
-                ProcessServerResponse(response);
-            });
+                await Task.Run(() =>
+                {
+
+                    ProcessServerResponse(response);
+                });
+            }
+            
             
         }
         /// <summary>
@@ -292,6 +299,7 @@ namespace Client2
             {
                 MessageBox.Show("Поздравляем!\nВы победили!");
                 isGameOver = true;
+                
             }
             else
             {
