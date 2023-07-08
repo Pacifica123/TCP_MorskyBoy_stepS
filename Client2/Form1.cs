@@ -139,7 +139,7 @@ namespace Client2
         // Отправка сообщения на сервер
         private async void SendMessageToServer(string message)
         {
-            if (isGameOver)
+            if (!isGameOver)
             {
                 using (TcpClient client = new TcpClient(ipServer, 8888))
                 {
@@ -190,7 +190,7 @@ namespace Client2
         /// <returns>Действие в зависимости от ответа сервера</returns>
         private async Task HandleServerResponse(string response)
         {
-            if (isGameOver)
+            if (!isGameOver)
             {
                 await Task.Run(() =>
                 {
