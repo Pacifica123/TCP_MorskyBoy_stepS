@@ -303,17 +303,18 @@ namespace Client2
             else this.Enabled = false;
             if (winnerIP == MyIP.ToString())
             {
+                Application.Exit();
                 MessageBox.Show("Поздравляем!\nВы победили!");
                 isGameOver = true;
-                
             }
             else
             {
+                Application.Exit();
                 MessageBox.Show("Игра окончена.\nВы проиграли =(");
                 isGameOver = true;
             }
             
-            Application.Exit();
+            
         }
 
         /// <summary>
