@@ -296,7 +296,8 @@ namespace Client2
             {
                 MessageBox.Show("Игра окончена.\nВы проиграли =(");
             }
-            isGameOver = true; 
+            isGameOver = true;
+            Application.Exit();
         }
 
         /// <summary>
