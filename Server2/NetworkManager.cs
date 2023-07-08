@@ -89,6 +89,7 @@ namespace Server2
             byte[] buffer = new byte[4000];
             int bytesRead;
 
+            //TODO: при отключении одного из игроков во время игры возникает исключение но клиентам уже не важно
             while (client.Connected && (bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
             {
                 string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
