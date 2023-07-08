@@ -78,6 +78,7 @@ namespace Client2
         //================================СЕТЬ
         private void btnCheckConnection_Click(object sender, EventArgs e)
         {
+            if (isGameOver) return;
             string ipAddress = txtIpAddress.Text.Trim();
 
             if (IsValidIpAddress(ipAddress))
@@ -120,10 +121,9 @@ namespace Client2
         /// </summary>
         private async void GetGameStateMotor()
         { 
-            if (isGameOver) 
-            { 
+            if (isGameOver)
                 return; 
-            }
+           
             await Task.Delay(2000);
             SendMessageToServer("get_last");
         }
@@ -139,6 +139,7 @@ namespace Client2
         // Отправка сообщения на сервер
         private async void SendMessageToServer(string message)
         {
+            if (isGameOver) return;
             if (!isGameOver)
             {
                 using (TcpClient client = new TcpClient(ipServer, 8888))
@@ -164,6 +165,7 @@ namespace Client2
         // Ожидание ответа от сервера
         private async Task WaitForServerResponse()
         {
+            if (isGameOver) return;
             // Задержка в 5 секунд
             await Task.Delay(5000);
             // Отправка запроса на сервер в зависимости от состояния игры
@@ -190,6 +192,7 @@ namespace Client2
         /// <returns>Действие в зависимости от ответа сервера</returns>
         private async Task HandleServerResponse(string response)
         {
+            if (isGameOver) return;
             if (!isGameOver)
             {
                 await Task.Run(() =>
@@ -207,6 +210,7 @@ namespace Client2
         /// <param name="response">ответ сервера</param>
         private void ProcessServerResponse(string response)
         {
+            if (isGameOver) return;
             switch (response)
             {
                 case "DontSecond":
@@ -261,6 +265,7 @@ namespace Client2
 
         private void ProcessLastTurn(string turn)
         {
+            if (isGameOver) return;
             Turn last = JsonConvert.DeserializeObject<Turn>(turn);
 
             //TODO: адаптация клиента под последний ход
@@ -287,6 +292,7 @@ namespace Client2
 
         private void ProcessFinal(string winnerIP)
         {
+            if (isGameOver) return;
             if (this.InvokeRequired)
             {
                 this.Invoke((MethodInvoker)delegate
