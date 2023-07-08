@@ -293,6 +293,7 @@ namespace Client2
         private void ProcessFinal(string winnerIP)
         {
             if (isGameOver) return;
+            isGameOver = true;
             if (this.InvokeRequired)
             {
                 this.Invoke((MethodInvoker)delegate
@@ -301,20 +302,25 @@ namespace Client2
                 });
             }
             else this.Enabled = false;
+            string messagewinner;
             if (winnerIP == MyIP.ToString())
             {
-                Application.Exit();
-                MessageBox.Show("Поздравляем!\nВы победили!");
-                isGameOver = true;
+
+                //MessageBox.Show("");
+                messagewinner = "Поздравляем!\nВы победили!";
+                
+                
             }
             else
             {
-                Application.Exit();
-                MessageBox.Show("Игра окончена.\nВы проиграли =(");
-                isGameOver = true;
+
+                //MessageBox.Show();
+                messagewinner = "Игра окончена.\nВы проиграли =(";
+                
+               // Application.Exit();
             }
             
-            
+            Application.Exit();
         }
 
         /// <summary>
