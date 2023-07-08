@@ -291,12 +291,14 @@ namespace Client2
             if (winnerIP == MyIP.ToString())
             {
                 MessageBox.Show("Поздравляем!\nВы победили!");
+                isGameOver = true;
             }
             else
             {
                 MessageBox.Show("Игра окончена.\nВы проиграли =(");
+                isGameOver = true;
             }
-            isGameOver = true;
+            
             Application.Exit();
         }
 
