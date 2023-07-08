@@ -306,16 +306,16 @@ namespace Client2
             if (winnerIP == MyIP.ToString())
             {
 
-                //MessageBox.Show("");
-                messagewinner = "Поздравляем!\nВы победили!";
+                MessageBox.Show("Поздравляем!\nВы победили!");
+                //messagewinner = "Поздравляем!\nВы победили!";
                 
                 
             }
             else
             {
 
-                //MessageBox.Show();
-                messagewinner = "Игра окончена.\nВы проиграли =(";
+                MessageBox.Show("Игра окончена.\nВы проиграли =(");
+                //messagewinner = "Игра окончена.\nВы проиграли =(";
                 
                // Application.Exit();
             }
