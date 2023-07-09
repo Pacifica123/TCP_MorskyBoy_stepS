@@ -320,8 +320,8 @@ namespace Client2
                // Application.Exit();
             }
             SendMessageToServer("disconnect");
-            client.Client.Close();
-
+            //client.Client.Close();
+            Task.Delay(5000);
             Application.Exit();
         }
 
