@@ -302,13 +302,14 @@ namespace Client2
                 });
             }
             else this.Enabled = false;
-            string messagewinner;
+            //string messagewinner;
+            SendMessageToServer("disconnect");
             if (winnerIP == MyIP.ToString())
             {
 
                 MessageBox.Show("Поздравляем!\nВы победили!");
                 //messagewinner = "Поздравляем!\nВы победили!";
-                
+                    
                 
             }
             else
@@ -319,7 +320,7 @@ namespace Client2
                 
                // Application.Exit();
             }
-            SendMessageToServer("disconnect");
+            
             //client.Client.Close();
             Task.Delay(5000);
             Application.Exit();
