@@ -94,10 +94,15 @@ namespace Server2
             {
                 string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                 string response = ProcessMessage(message, client); 
-
+                if (response == "disconnected")
+                {
+                    client.Close();
+                    break;
+                }
                 byte[] responseBytes = Encoding.UTF8.GetBytes(response);
                 stream.Write(responseBytes, 0, responseBytes.Length);
             }
+
 
             client.Close();
         }
@@ -135,7 +140,8 @@ namespace Server2
                 //    return ProcessAttackForOpponent(FindGameById(thisPlayer.GameId));
                 case "disconnect":
                     RemovePlayer(id);
-                    return ""; //игроку уже ничто не нужно после отключения
+
+                    return "disconnected"; //игроку уже ничто не нужно после отключения
                 //case "get_state":
                 //    return (GetStateBin_String(id));
                 case "get_last":
@@ -145,32 +151,15 @@ namespace Server2
                     return "Default";
             }
         }
-        //private string GetStateBin_String(string id)
-        //{
-        //    Game thisGame = FindGameById(FindPlayerById(id).GameId);
-        //    Console.WriteLine($"Игрок {id} запросил текущее состояние игры");
-
-        //    using (MemoryStream stream = new MemoryStream())
-        //    {
-        //        Serializer.Serialize(stream, thisGame);
-        //        byte[] serializedData = stream.ToArray();
-        //        string stateString = "STATE" + Convert.ToBase64String(serializedData);
-        //        return stateString;
-        //    }
-        //}
-        //private string GetStateJSON(string id)
-        //{
-        //    Game thisGame = FindGameById(FindPlayerById(id).GameId);
-        //    Console.WriteLine($"Игрок {id} запросил текущее состояние игры");
-        //    return JsonConvert.SerializeObject(thisGame);
-        //}
+        
 
         private void RemovePlayer(string id)
         {
             Player thisPlayer = FindPlayerById(id);
             Game thisGame = FindGameById(thisPlayer.GameId);
             thisGame.Players.Remove(thisPlayer);
-            
+            if (thisGame.Players.Count == 0) games.Remove(thisGame);
+
         }
 
         /// <summary>

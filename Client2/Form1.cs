@@ -319,6 +319,7 @@ namespace Client2
                 
                // Application.Exit();
             }
+            SendMessageToServer("")
             client.Client.Close();
 
             Application.Exit();
