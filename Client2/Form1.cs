@@ -99,7 +99,7 @@ namespace Client2
                             string response = Encoding.UTF8.GetString(data, 0, bytesRead);
 
                             txtIpAddress.Text = response;
-                            ProcessServerResponse(response);
+                            ProcessServerResponse(response, client);
 
                             ipServer = ipAddress;
                         }
@@ -157,7 +157,7 @@ namespace Client2
                             client.Client.Close();
                             return;
                         }
-                        await HandleServerResponse(response); //(там итак await внутри)
+                        await HandleServerResponse(response, client); //(там итак await внутри)
                     }
                 }
             }
@@ -190,7 +190,7 @@ namespace Client2
         /// </summary>
         /// <param name="response">ответ сервера</param>
         /// <returns>Действие в зависимости от ответа сервера</returns>
-        private async Task HandleServerResponse(string response)
+        private async Task HandleServerResponse(string response, TcpClient client)
         {
             if (isGameOver) return;
             if (!isGameOver)
@@ -198,7 +198,7 @@ namespace Client2
                 await Task.Run(() =>
                 {
 
-                    ProcessServerResponse(response);
+                    ProcessServerResponse(response, client);
                 });
             }
             
@@ -208,7 +208,7 @@ namespace Client2
         /// Механизм обработки сервера (ядро HandleServerRespons-а)
         /// </summary>
         /// <param name="response">ответ сервера</param>
-        private void ProcessServerResponse(string response)
+        private void ProcessServerResponse(string response, TcpClient client)
         {
             if (isGameOver) return;
             switch (response)
@@ -250,7 +250,7 @@ namespace Client2
                 //    break;
                 case string result when result.Contains("LastTurn:"):
                     if (isGameOver) return;
-                    ProcessLastTurn(result.Substring("LastTurn:".Length));
+                    ProcessLastTurn(result.Substring("LastTurn:".Length), client);
                     break;
                 case "Good!":
                     break;
@@ -263,7 +263,7 @@ namespace Client2
             }
         }
 
-        private void ProcessLastTurn(string turn)
+        private void ProcessLastTurn(string turn, TcpClient client)
         {
             if (isGameOver) return;
             Turn last = JsonConvert.DeserializeObject<Turn>(turn);
@@ -272,7 +272,7 @@ namespace Client2
             if (last == null) { MessageBox.Show("Происходит какая-то ошибка!"); return; }
             if (last.resultForNextPlayer != null && last.resultForNextPlayer.StartsWith("WIN:"))
             {
-                ProcessFinal(last.resultForNextPlayer.Substring("WIN:".Length));
+                ProcessFinal(last.resultForNextPlayer.Substring("WIN:".Length), client);
                 return;
             }
             if (last.AtackedPlayerID != null && last.AtackerID != null && (last.resultForNextPlayer != "" || last.resultForNextPlayer != "NotAlredy"))
@@ -290,7 +290,7 @@ namespace Client2
             GetGameStateMotor();
         }
 
-        private void ProcessFinal(string winnerIP)
+        private void ProcessFinal(string winnerIP, TcpClient client)
         {
             if (isGameOver) return;
             isGameOver = true;
