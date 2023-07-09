@@ -722,6 +722,16 @@ namespace Client2
                     OpponentSea.Enabled = true;
                     OpponentSea.ColumnCount = 10;
                     OpponentSea.RowCount = 10;
+                    int availableHeight = YourSea.ClientSize.Height;
+                    int rowCount = YourSea.RowCount;
+
+                    int rowHeight = availableHeight / rowCount;
+
+                    for (int i = 0; i < rowCount; i++)
+                    {
+
+                        YourSea.Rows[i].Height = rowHeight;
+                    }
                 });
                 
             }
