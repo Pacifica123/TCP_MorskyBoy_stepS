@@ -319,7 +319,7 @@ namespace Client2
                 
                // Application.Exit();
             }
-            SendMessageToServer("")
+            SendMessageToServer("disconnect");
             client.Client.Close();
 
             Application.Exit();
