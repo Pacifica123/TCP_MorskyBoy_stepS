@@ -319,38 +319,12 @@ namespace Client2
                 
                // Application.Exit();
             }
-            
+            client.Client.Close();
+
             Application.Exit();
         }
 
-        /// <summary>
-        /// Актуализирует клиента под состояние игры на сервер
-        /// </summary>
-        /// <param name="GameStateBIN"></param>
-        //private void ProcessGameState(string GameState)
-        //{
-
-        //    byte[] serializedData = Convert.FromBase64String(GameState);
-
-        //    using (MemoryStream stream = new MemoryStream(serializedData))
-        //    {
-        //        Game currentGameState = Serializer.Deserialize<Game>(stream);
-
-        //        if (currentGameState.Players.Count == 2 && currentGameState.GameStarted)
-        //            OpponentSea.Enabled = currentGameState.CurrentPlayer.PlayerId == MyIP.ToString();
-
-        //        if (currentGameState.LastTurn != null)
-        //        {
-        //            if (currentGameState.LastTurn.AtackedPlayer.PlayerId == MyIP.ToString())
-        //            {
-        //                Turn last = currentGameState.LastTurn;
-        //                ProcessOpponentAttackResult(last.X, last.Y, last.resultForNextPlayer);
-        //            }
-        //        }
-
-        //       // GetGameStateMotor();
-        //    }
-        //}
+        
 
         //===============================
         #endregion
@@ -722,7 +696,7 @@ namespace Client2
                     OpponentSea.Enabled = true;
                     OpponentSea.ColumnCount = 10;
                     OpponentSea.RowCount = 10;
-                    int availableHeight = YourSea.ClientSize.Height;
+                    int availableHeight = OpponentSea.ClientSize.Height;
                     int rowCount = YourSea.RowCount;
 
                     int rowHeight = availableHeight / rowCount;
@@ -730,7 +704,7 @@ namespace Client2
                     for (int i = 0; i < rowCount; i++)
                     {
 
-                        YourSea.Rows[i].Height = rowHeight;
+                        OpponentSea.Rows[i].Height = rowHeight;
                     }
                 });
                 
@@ -783,35 +757,7 @@ namespace Client2
             }
 
         }
-        /// <summary>
-        /// результат атаки противника по нашему полю
-        /// </summary>
-        /// <param name="result"></param>
-        //private void ProcessOpponentAttackResult(int X, int Y, string AtackResult)
-        //{
-        //    result = result.Substring("OpponentAttackResult:".Length);
-        //    int attackedCellX, attackedCellY;
-        //    bool isHit;
-
-        //    // Разбор ответа сервера
-        //    string[] tokens = result.Split(',');
-        //    attackedCellX = int.Parse(tokens[1]);
-        //    attackedCellY = int.Parse(tokens[2]);
-        //    isHit = tokens[0] == /*"you_fail" || tokens[0] ==*/ "opponent_shot";
-
-        //    // Окрашивание клетки на поле пользователя в зависимости от результата атаки
-        //    if (isHit)
-        //    {
-        //        DataGridViewCell cell = YourSea.Rows[attackedCellY].Cells[attackedCellX];
-        //        cell.Style.BackColor = Color.Black;
-
-        //    }
-        //    else
-        //    {
-        //        DataGridViewCell cell = YourSea.Rows[attackedCellY].Cells[attackedCellX];
-        //        cell.Style.BackColor = Color.Blue;
-        //    }
-        //}
+       
         private void ProcessOpponentAttackResult(int X, int Y, string result)
         {
 
