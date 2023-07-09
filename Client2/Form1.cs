@@ -307,7 +307,7 @@ namespace Client2
             if (winnerIP == MyIP.ToString())
             {
 
-                MessageBox.Show("Поздравляем!\nВы победили!");
+                MessageBox.Show("Поздравляем!\nВы победили!"); 
                 //messagewinner = "Поздравляем!\nВы победили!";
                     
                 
