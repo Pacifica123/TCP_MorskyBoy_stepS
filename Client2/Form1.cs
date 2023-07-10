@@ -268,7 +268,6 @@ namespace Client2
             if (isGameOver) return;
             Turn last = JsonConvert.DeserializeObject<Turn>(turn);
 
-            //TODO: адаптация клиента под последний ход
             if (last == null) { MessageBox.Show("Происходит какая-то ошибка!"); return; }
             if (last.resultForNextPlayer != null && last.resultForNextPlayer.StartsWith("WIN:"))
             {
@@ -282,8 +281,6 @@ namespace Client2
                 // здесь resultForNextPlayer - это мы - красим наше поле:
                 if (last.AtackedPlayerID == MyIP.ToString()) ProcessOpponentAttackResult(last.X, last.Y, last.resultForNextPlayer);
                 
-                //TODO: добавить в ЛастХод кол-во кораблей или другой индикатор окончания игры
-
             }
 
             if (isGameOver) return;

@@ -89,22 +89,30 @@ namespace Server2
             byte[] buffer = new byte[4000];
             int bytesRead;
 
-            //TODO: при отключении одного из игроков во время игры возникает исключение но клиентам уже не важно
-            while (client.Connected && (bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
+            try
             {
-                string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                string response = ProcessMessage(message, client); 
-                if (response == "disconnected")
+                //TODO: при отключении одного из игроков во время игры возникает исключение но клиентам уже не важно
+                while (client.Connected && (bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
                 {
-                    client.Close();
-                    break;
+                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    string response = ProcessMessage(message, client);
+                    if (response == "disconnected")
+                    {
+                        client.Close();
+                        break;
+                    }
+                    byte[] responseBytes = Encoding.UTF8.GetBytes(response);
+                    stream.Write(responseBytes, 0, responseBytes.Length);
                 }
-                byte[] responseBytes = Encoding.UTF8.GetBytes(response);
-                stream.Write(responseBytes, 0, responseBytes.Length);
+
+                client.Close();
             }
-
-
-            client.Close();
+            catch
+            {
+                //ProcessMessage("disconnect", client);
+                Console.WriteLine($"Клиент {((IPEndPoint)client.Client.RemoteEndPoint).Address} самостоятельно отключился");
+            }
+            
         }
         /// <summary>
         /// ядро механизма обработки запросов клиентов
@@ -140,7 +148,8 @@ namespace Server2
                 //    return ProcessAttackForOpponent(FindGameById(thisPlayer.GameId));
                 case "disconnect":
                     RemovePlayer(id);
-
+                    Console.WriteLine($"Клиент {((IPEndPoint)client.Client.RemoteEndPoint).Address} самостоятельно отключился");
+                client.Close();
                     return "disconnected"; //игроку уже ничто не нужно после отключения
                 //case "get_state":
                 //    return (GetStateBin_String(id));
