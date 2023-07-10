@@ -40,6 +40,8 @@ namespace Client2
         }
 
         // Глобальные переменные
+        Color defaultCell = Color.FromArgb(0x41, 0x80, 0x90); //Color.RoyalBlue;
+        Color shipCell = Color.FromArgb(0x10, 0x44, 0x80);
         private bool isGameStarted = false;
         private bool isGameOver = false;
         private Ship currentShip; // Текущий корабль
@@ -51,9 +53,10 @@ namespace Client2
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            
             // Конфигурируем поле
-            YourSea.DefaultCellStyle.BackColor = Color.White; // Задаем цвет фона ячеек
-            YourSea.DefaultCellStyle.SelectionBackColor = Color.Blue; // Задаем цвет выделенных ячеек
+            YourSea.DefaultCellStyle.BackColor = defaultCell; // Задаем цвет фона ячеек
+            YourSea.DefaultCellStyle.SelectionBackColor = Color.LightBlue; // Задаем цвет выделенных ячеек
             YourSea.DefaultCellStyle.SelectionForeColor = Color.White; // Задаем цвет текста выделенных ячеек
             YourSea.RowCount = 10;
             YourSea.ColumnCount = 10;
@@ -75,7 +78,12 @@ namespace Client2
         #endregion
 
         #region СЕТЬ
-        //================================СЕТЬ
+        
+        /// <summary>
+        /// Подключение к Серверу
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btnCheckConnection_Click(object sender, EventArgs e)
         {
             if (isGameOver) return;
@@ -104,7 +112,6 @@ namespace Client2
                             ipServer = ipAddress;
                         }
                     }
-                    //GetGameStateMotor();
                 }
                 catch (Exception ex)
                 {
@@ -116,6 +123,8 @@ namespace Client2
                 MessageBox.Show("Введите действительный IP-адрес", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
+
+        
         /// <summary>
         /// Механизм по периодическому спросу состояния игры у сервера
         /// </summary>
@@ -128,6 +137,12 @@ namespace Client2
             SendMessageToServer("get_last");
         }
          
+        
+        /// <summary>
+        /// проверка IP адресса на корректность
+        /// </summary>
+        /// <param name="ipAddress"></param>
+        /// <returns></returns>
         private bool IsValidIpAddress(string ipAddress)
         {
             string pattern = @"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$";
@@ -136,9 +151,17 @@ namespace Client2
 
         
 
-        // Отправка сообщения на сервер
+        /// <summary>
+        /// отправка сообщения на сервер и обработка последующего ответа
+        /// </summary>
+        /// <param name="message"></param>
         private async void SendMessageToServer(string message)
         {
+            if (ipServer == null || ipServer == "")
+            {
+                MessageBox.Show("Вы не подключились к серверу!");
+                return;
+            }
             if (isGameOver) return;
             if (!isGameOver)
             {
@@ -162,7 +185,12 @@ namespace Client2
                 }
             }
         }
-        // Ожидание ответа от сервера
+
+        
+        /// <summary>
+        /// Задача ожидания сервера когда не все подключились/расставили корабли
+        /// </summary>
+        /// <returns></returns>
         private async Task WaitForServerResponse()
         {
             if (isGameOver) return;
@@ -171,12 +199,16 @@ namespace Client2
             // Отправка запроса на сервер в зависимости от состояния игры
             if (!isGameStarted)
                 SendMessageToServer("YouReady?");
-            // тут должен был быть else с отправкой OpponentAlreadyAttacked? но потом все пошло немного по другому
         }   
 
+        
+        /// <summary>
+        /// Получаем ответ с сервера
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns>строка овтета от сервера</returns>
         private string ReceiveMessageFromServer(NetworkStream stream)
         {
-            //собираем ответ с Сервака
             byte[] responseBytes = new byte[4096];
             int bytesRead = stream.Read(responseBytes, 0, responseBytes.Length);
             
@@ -185,6 +217,7 @@ namespace Client2
             return response;
         }
 
+        
         /// <summary>
         /// Обработка ответа от сервера
         /// </summary>
@@ -201,9 +234,9 @@ namespace Client2
                     ProcessServerResponse(response, client);
                 });
             }
-            
-            
         }
+
+        
         /// <summary>
         /// Механизм обработки сервера (ядро HandleServerRespons-а)
         /// </summary>
@@ -226,28 +259,6 @@ namespace Client2
                 case string result when result.StartsWith("GameStarted"):
                     ClientGameTransformation(result.Substring("GameStarted:".Length));
                     break;
-                //case string result when result.StartsWith("AttackResult"):
-                //    ProcessAttackResult(result.Substring("AttackResult".Length));
-                //    break;
-                //case string result when result.StartsWith("OpponentAttackResult"):
-                //    ProcessOpponentAttackResult(result);
-                //    break;
-                //case "NotAlready":
-                //    // снова ждем но уже когда сходит пртивник
-                //    //ToolTip waiting = new ToolTip();
-                //    //waiting.Show("Ждем ответа оппонента...", OpponentSea);
-                //    WaitForServerResponse();
-                //    break;
-                ////case string result when result.Contains("STATE"):
-                //    string base64Data = result.Substring("STATE".Length);
-                //    //byte[] decodedBytes = Convert.FromBase64String(base64Data);
-                //    //string decodedString = Convert.ToBase64String(decodedBytes);
-                //    //ProcessGameState(decodedString);
-                //    ProcessGameState(base64Data);
-                //    break;
-                //case "NotYourTurn":
-                //    MessageBox.Show("Сейчас не ваш ход!");
-                //    break;
                 case string result when result.Contains("LastTurn:"):
                     if (isGameOver) return;
                     ProcessLastTurn(result.Substring("LastTurn:".Length), client);
@@ -263,6 +274,12 @@ namespace Client2
             }
         }
 
+        
+        /// <summary>
+        /// Механизм обработки последнего хода и адаптации представления клиента под него
+        /// </summary>
+        /// <param name="turn"></param>
+        /// <param name="client"></param>
         private void ProcessLastTurn(string turn, TcpClient client)
         {
             if (isGameOver) return;
@@ -287,6 +304,12 @@ namespace Client2
             GetGameStateMotor();
         }
 
+        
+        /// <summary>
+        /// Вывод победителя, разрывание подключения
+        /// </summary>
+        /// <param name="winnerIP"></param>
+        /// <param name="client"></param>
         private void ProcessFinal(string winnerIP, TcpClient client)
         {
             if (isGameOver) return;
@@ -324,8 +347,6 @@ namespace Client2
         }
 
         
-
-        //===============================
         #endregion
 
 
@@ -342,6 +363,16 @@ namespace Client2
         }
         private void btnSend_Click(object sender, EventArgs e)
         {
+            if (ipServer == null || ipServer == "" || txtIpAddress.Text != "Good!")
+            {
+                MessageBox.Show("Вы не подключились к серверу!");
+                return;
+            }
+            if (shipBuffer.Count > 0)
+            {
+                MessageBox.Show("Вы не расставили все корабли!");
+                return;
+            }
             // Сериализация списка кораблей в JSON
             string shipBufferJson = JsonConvert.SerializeObject(Ships_buffer);
 
@@ -350,7 +381,7 @@ namespace Client2
 
             // Отправка сообщения на сервер
             SendMessageToServer(message);
-
+            btnSend.Enabled = false;
         }
         private void YourSea_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
@@ -380,8 +411,6 @@ namespace Client2
             }
 
         }
-
-
         private void btnConfirm_Click(object sender, EventArgs e)
         {
 
@@ -398,7 +427,7 @@ namespace Client2
                     // Окрасить ячейки корабля в другой цвет
                     foreach (SeaCell cell in currentShip.ShipCells)
                     {
-                        YourSea.Rows[cell.Y].Cells[cell.X].Style.BackColor = Color.Gray;
+                        YourSea.Rows[cell.Y].Cells[cell.X].Style.BackColor = shipCell;
                     }
 
                     // Обновить доступность кнопок
@@ -418,7 +447,6 @@ namespace Client2
                 }
             }
         }
-
         private void btnCancel_Click(object sender, EventArgs e)
         {
             if (Ships_buffer.Count > 0)
@@ -431,7 +459,7 @@ namespace Client2
                 // Окрашиваем ячейки, соответствующие удаленному кораблю, в исходный цвет
                 foreach (SeaCell cell in lastShip.ShipCells)
                 {
-                    YourSea.Rows[cell.Y].Cells[cell.X].Style.BackColor = Color.White;
+                    YourSea.Rows[cell.Y].Cells[cell.X].Style.BackColor = defaultCell;
                 }
                 currentShip = lastShip;
             }
@@ -447,13 +475,12 @@ namespace Client2
                 SendMessageToServer("get_last"); //внеочередной спрос для ускорения??
             }
         }
-
         private void btnRandomPlacement_Click(object sender, EventArgs e)
         {
             Random random = new Random();
             // Очищаем поле перед расстановкой
             //YourSea.Rows.Clear();
-            YourSea.Refresh();
+           // YourSea.Refresh();
 
             // Расставляем корабли случайным образом
             List<Ship> shipBufferCopy = new List<Ship>(shipBuffer);
@@ -477,7 +504,7 @@ namespace Client2
                 }
             }
 
-            // Обновляем состояние кнопок
+            //// Обновляем состояние кнопок
             UpdateButtonStates();
         }
         //--------------------------------------------------
@@ -493,7 +520,7 @@ namespace Client2
             {
                 int x = startX + (cell.X-startX);
                 int y = startY + (cell.Y-startY);
-                YourSea.Rows[y].Cells[x].Style.BackColor = Color.Gray;
+                YourSea.Rows[y].Cells[x].Style.BackColor = shipCell;
             }
 
             // Обновляем состояние кнопок
@@ -522,14 +549,13 @@ namespace Client2
 
                 if (x >= 0 && x < YourSea.ColumnCount && y >= 0 && y < YourSea.RowCount)
                 {
-                    if (YourSea.Rows[y].Cells[x].Style.BackColor == Color.Gray)
+                    if (YourSea.Rows[y].Cells[x].Style.BackColor == shipCell)
                         return false;
                 }
             }
 
             return true;
         }
-
         private IEnumerable<SeaCell> GetShipCells(Ship ship, SeaCell startCell, bool isVertical)
         {
             List<SeaCell> cells = new List<SeaCell>();
@@ -554,7 +580,7 @@ namespace Client2
             // Очистить предыдущие координаты корабля
             foreach (SeaCell shipCell in currentShip.ShipCells)
             {
-                YourSea.Rows[shipCell.Y].Cells[shipCell.X].Style.BackColor = Color.White;
+                YourSea.Rows[shipCell.Y].Cells[shipCell.X].Style.BackColor = defaultCell;
             }
 
             // Обновить координаты корабля
@@ -572,7 +598,7 @@ namespace Client2
                 {
                     for (int j = columnIndex; j <= endColumn; j++)
                     {
-                        if (YourSea.Rows[i].Cells[j].Style.BackColor != Color.Gray)
+                        if (YourSea.Rows[i].Cells[j].Style.BackColor != shipCell)
                         {
                             YourSea.Rows[i].Cells[j].Style.BackColor = Color.LightGray;
                             currentShip.ShipCells.Add(new SeaCell(j, i, SeaCell.CellState.OccupiedByShip));
@@ -592,7 +618,6 @@ namespace Client2
                 MessageBox.Show("Все корабли размещены!");
             }
         }
-
         private void UpdateButtonStates()
         {
             // Проверяем, есть ли расстановка кораблей
@@ -602,20 +627,18 @@ namespace Client2
             btnConfirm.Enabled = hasShipPlacement;
             btnCancel.Enabled = hasShipPlacement;
             btnDisconnect.Enabled = hasShipPlacement;
-            
+            btnRandomPlacement.Enabled = hasShipPlacement;
+            //btnSend.Enabled = hasShipPlacement;
         }
-
         private void UpdateGridView()
         {
-            // Обновить отображение полей
-
             // Сначала очищаем все ячейки кроме утвержденных
             foreach (DataGridViewRow row in YourSea.Rows)
             {
                 foreach (DataGridViewCell cell in row.Cells)
                 {
-                    if(cell.Style.BackColor != Color.Gray)
-                        cell.Style.BackColor = Color.White;
+                    if(cell.Style.BackColor != shipCell)
+                        cell.Style.BackColor = defaultCell;
                 }
             }
 
@@ -629,6 +652,8 @@ namespace Client2
                 }
             }
         }
+
+
         /// <summary>
         /// Этот корабль конфликтует хотя с одним из уже выставленных?
         /// </summary>
@@ -644,6 +669,8 @@ namespace Client2
 
             return false;
         }
+
+
         /// <summary>
         /// Сравнивает расположение двух короблей относительно друг друга по клеточно, проверяя соприкасаются/пересекаются ли ячейки
         /// </summary>
@@ -665,6 +692,11 @@ namespace Client2
             return false;
         }
 
+
+        /// <summary>
+        /// Преобразует клиента когда оба игрока будут готовы к началу игры
+        /// </summary>
+        /// <param name="WhosTurn"></param>
         private void ClientGameTransformation(string WhosTurn)
         {
             isGameStarted = true;
@@ -685,6 +717,7 @@ namespace Client2
             }
             GetGameStateMotor();
         }
+        
         #region РЕЖИМ АТАКИ
         private void InitOpponentSea()
         {
@@ -720,6 +753,8 @@ namespace Client2
             string message = $"Attack:{selectedCellX},{selectedCellY}";
             SendMessageToServer(message);
         }
+        
+
         /// <summary>
         /// Результат нашей атаки
         /// </summary>
@@ -756,7 +791,14 @@ namespace Client2
             }
 
         }
-       
+        
+
+        /// <summary>
+        /// Результат атаки противника
+        /// </summary>
+        /// <param name="X"></param>
+        /// <param name="Y"></param>
+        /// <param name="result"></param>
         private void ProcessOpponentAttackResult(int X, int Y, string result)
         {
 
@@ -772,7 +814,7 @@ namespace Client2
             else
             {
                 DataGridViewCell cell = YourSea.Rows[Y].Cells[X];
-                cell.Style.BackColor = Color.Aqua;
+                cell.Style.BackColor = Color.DarkGray;
 
                 if (OpponentSea.InvokeRequired)
                 {
