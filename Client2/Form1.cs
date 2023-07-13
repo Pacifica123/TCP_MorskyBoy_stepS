@@ -133,7 +133,7 @@ namespace Client2
             if (isGameOver)
                 return; 
            
-            await Task.Delay(2000);
+            await Task.Delay(1000);
             SendMessageToServer("get_last");
         }
          
