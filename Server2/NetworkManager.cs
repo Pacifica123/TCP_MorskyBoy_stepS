@@ -163,15 +163,22 @@ namespace Server2
                     return "Default";
             }
         }
-        
+
 
         private void RemovePlayer(string id)
         {
             Player thisPlayer = FindPlayerById(id);
-            Game thisGame = FindGameById(thisPlayer.GameId);
-            thisGame.Players.Remove(thisPlayer);
-            if (thisGame.Players.Count == 0) games.Remove(thisGame);
+            if (thisPlayer != null)
+            {
+                Game thisGame = FindGameById(thisPlayer.GameId);
+                thisGame.Players.Remove(thisPlayer);
 
+                if (thisGame.Players.Count == 0)
+                {
+                    games.Remove(thisGame);
+                }
+            }
+            int test = 0;
         }
 
         private string placementShips(string placementJSON, TcpClient client)
