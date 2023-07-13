@@ -91,7 +91,6 @@ namespace Server2
 
             try
             {
-                //TODO: при отключении одного из игроков во время игры возникает исключение но клиентам уже не важно
                 while (client.Connected && (bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
                 {
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
@@ -107,10 +106,14 @@ namespace Server2
 
                 client.Close();
             }
-            catch
+            catch //TODO:игра висит без дела и клиент не может повторно зайти
             {
+                string id = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+                RemovePlayer(id);
+                Console.WriteLine($"Клиент {id} самостоятельно отключился");
+                client.Close();
                 //ProcessMessage("disconnect", client);
-                Console.WriteLine($"Клиент {((IPEndPoint)client.Client.RemoteEndPoint).Address} самостоятельно отключился");
+                //Console.WriteLine($"Клиент {id} самостоятельно отключился");
             }
             
         }
@@ -149,7 +152,7 @@ namespace Server2
                 case "disconnect":
                     RemovePlayer(id);
                     Console.WriteLine($"Клиент {((IPEndPoint)client.Client.RemoteEndPoint).Address} самостоятельно отключился");
-                client.Close();
+                    client.Close();
                     return "disconnected"; //игроку уже ничто не нужно после отключения
                 //case "get_state":
                 //    return (GetStateBin_String(id));
@@ -171,34 +174,6 @@ namespace Server2
 
         }
 
-        /// <summary>
-        /// Ответ на каждый 10-секундый вопрос клиента о том сходил ли оппонент
-        /// </summary>
-        /// <returns>информацию о том, попал ли оппонент и куда в формате "opponent_*,X,Y"</returns>
-        /// <exception cref="NotImplementedException"></exception>
-        //private string ProcessAttackForOpponent(Game game)
-        //{
-        //    string answer = "OpponentAttackResult:";
-        //    if (game.LastTurn != null || game.LastTurn.resultForNextPlayer == null)
-        //    {
-        //        answer += game.LastTurn.resultForNextPlayer; //tokens[0]
-        //    }
-        //    else
-        //    {
-        //        answer += "NotAlready"; //tokens[0]
-        //    } 
-            
-        //    answer += "," + game.LastTurn.X.ToString(); //tokens[1]
-        //    answer += "," + game.LastTurn.Y.ToString(); //tokens[2]
-        //    return answer;
-        //}
-
-        /// <summary>
-        /// Расстановка кораблей для игрока
-        /// </summary>
-        /// <param name="placementJSON">сериализованная строка - список кораблей</param>
-        /// <param name="client"></param>
-        /// <returns>тоже что и CheckSecondPlayer</returns>
         private string placementShips(string placementJSON, TcpClient client)
         {
             

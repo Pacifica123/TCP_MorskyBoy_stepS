@@ -725,6 +725,7 @@ namespace Client2
             {
                 OpponentSea.Invoke((MethodInvoker)delegate 
                 { 
+                    OpponentSea.DefaultCellStyle.BackColor = defaultCell;
                     OpponentSea.Enabled = true;
                     OpponentSea.ColumnCount = 10;
                     OpponentSea.RowCount = 10;
