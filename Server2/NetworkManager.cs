@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using Newtonsoft.Json;
-using ProtoBuf;
 
 namespace Server2
 {
@@ -23,6 +22,7 @@ namespace Server2
             games = new List<Game>();
             manager = new GameManager();
         }
+
         /// <summary>
         /// Весь общий процесс работы сервера
         /// </summary>
@@ -79,6 +79,7 @@ namespace Server2
                 Task.Run(() => ProcessClient(client));
             }
         }
+        
         /// <summary>
         /// Главный механизм обработки запросов клиентов и ответа на них
         /// </summary>
@@ -97,6 +98,8 @@ namespace Server2
                     string response = ProcessMessage(message, client);
                     if (response == "disconnected")
                     {
+                        string id = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+                        RemovePlayer(id);
                         client.Close();
                         break;
                     }
@@ -112,17 +115,15 @@ namespace Server2
                 RemovePlayer(id);
                 Console.WriteLine($"Клиент {id} самостоятельно отключился");
                 client.Close();
-                //ProcessMessage("disconnect", client);
-                //Console.WriteLine($"Клиент {id} самостоятельно отключился");
             }
-            
         }
+
         /// <summary>
         /// ядро механизма обработки запросов клиентов
         /// </summary>
         /// <param name="message">полученное сообщение</param>
         /// <param name="client"></param>
-        /// <returns></returns>
+        /// <returns>Ответ сервера</returns>
         private string ProcessMessage(string message, TcpClient client)
         {
             // Обработка полученного сообщения и возвращение ответа
@@ -164,7 +165,8 @@ namespace Server2
             }
         }
 
-
+        #region ПОД ПЕРЕНОС В GameManager
+        //TODO: переместить в GameManager
         private void RemovePlayer(string id)
         {
             Player thisPlayer = FindPlayerById(id);
@@ -218,6 +220,7 @@ namespace Server2
                 return "Player not found";
             }
         }
+        
         /// <summary>
         /// Проверка на второго игрока и его гоовность для первого
         /// </summary>
@@ -249,6 +252,7 @@ namespace Server2
 
             return "GameStarted:"+game.CurrentPlayer.PlayerId; //чей ход
         }
+
         private Player FindPlayerById(string playerId)
         {
             foreach (var game in games)
@@ -268,32 +272,14 @@ namespace Server2
         {
             return games.FirstOrDefault(g => g.GameId == gameId);
         }
-        private bool IsClientAlreadyInGame(TcpClient client)
-        {
-            string clientId = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
-
-            foreach (Game game in games)
-            {
-                foreach (Player player in game.Players)
-                {
-                    if (player.PlayerId == clientId)
-                    {
-                        return true; // Клиент уже числится в игре
-                    }
-                }
-            }
-
-            return false; // Клиент не числится в игре
-        }
         private void AddPlayerToGame(TcpClient client, Game game)
         {
             // Создаем нового игрока с указанным ID и привязываем его к игре
             Player player = new Player(GeneratePlayerId(client), game);
-            //game.AddPlayer(player);
             game.Players.Add(player);
             Console.WriteLine($"Присоединился игрок:{player.PlayerId} к игре: {player.GameId}");
-            //client.AssignGame(game);
         }
+
         private string GeneratePlayerId(TcpClient client)
         {
             // Получение IP-адреса клиента
@@ -327,7 +313,24 @@ namespace Server2
                 //return ("you_fail,"+coordinates);
             }
         }
+        #endregion
 
+        private bool IsClientAlreadyInGame(TcpClient client)
+        {
+            string clientId = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
 
+            foreach (Game game in games)
+            {
+                foreach (Player player in game.Players)
+                {
+                    if (player.PlayerId == clientId)
+                    {
+                        return true; // Клиент уже числится в игре
+                    }
+                }
+            }
+
+            return false; // Клиент не числится в игре
+        }
     }
 }

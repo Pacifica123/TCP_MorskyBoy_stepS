@@ -160,11 +160,11 @@
             this.btnSend.FlatAppearance.BorderColor = System.Drawing.SystemColors.HotTrack;
             this.btnSend.FlatAppearance.BorderSize = 3;
             this.btnSend.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSend.Font = new System.Drawing.Font("Mistral", 15F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.btnSend.Font = new System.Drawing.Font("Magneto", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.btnSend.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(30)))), ((int)(((byte)(80)))), ((int)(((byte)(150)))));
             this.btnSend.Location = new System.Drawing.Point(135, 380);
             this.btnSend.Name = "btnSend";
-            this.btnSend.Size = new System.Drawing.Size(127, 62);
+            this.btnSend.Size = new System.Drawing.Size(189, 62);
             this.btnSend.TabIndex = 8;
             this.btnSend.Text = "ОТПРАВИТЬ";
             this.btnSend.UseVisualStyleBackColor = false;

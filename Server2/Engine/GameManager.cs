@@ -14,20 +14,22 @@ namespace Server2.Engine
             game.GameStarted = true;
         }
 
+        /// <summary>
+        /// Для заданной игры устанавливает флаг GameOver и в последний ход записывает IPID победитиля
+        /// </summary>
+        /// <param name="game"></param>
+        /// <param name="win"></param>
         private void EndGame(Game game, Player win)
         {
             game.GameOver = true;
             game.LastTurn.resultForNextPlayer = "WIN:" + win.PlayerId;
         }
-        //public void Rasstanaovka(Game game, string playerId, List<Ship> ships)
-        //{
-        //    Player currentPlayer = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
 
-        //    if (currentPlayer != null)
-        //    {
-        //        currentPlayer.PlayerSea.Ships = ships;
-        //    }
-        //}
+        /// <summary>
+        /// Проверяет а также производит процесс завершения игры если true
+        /// </summary>
+        /// <param name="game"></param>
+        /// <returns></returns>
         public bool CheckGameOver(Game game)
         {
             if (game.Players.Count < 2) return false;
@@ -40,6 +42,12 @@ namespace Server2.Engine
             return false;
 
         }
+
+        /// <summary>
+        ///проверка все ли корабли разрушены на поле
+        /// </summary>
+        /// <param name="SeaOfShips"></param>
+        /// <returns></returns>
         private bool CheckAllShipsDestructed(List<Ship> SeaOfShips)
         {
             if (SeaOfShips == null || SeaOfShips.Count == 0) return false;

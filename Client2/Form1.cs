@@ -79,12 +79,11 @@ namespace Client2
 
         #region СЕТЬ
         
+        
         /// <summary>
-        /// Подключение к Серверу
+        /// Тестовая проверка подключения к серверу
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btnCheckConnection_Click(object sender, EventArgs e)
+        private void CheckConnection()
         {
             if (isGameOver) return;
             string ipAddress = txtIpAddress.Text.Trim();
@@ -95,7 +94,7 @@ namespace Client2
                 {
                     using (TcpClient client = new TcpClient())
                     {
-                        client.Connect(ipAddress, 8888); 
+                        client.Connect(ipAddress, 8888);
 
                         using (NetworkStream stream = client.GetStream())
                         {
@@ -346,7 +345,7 @@ namespace Client2
             Application.Exit();
         }
 
-        
+
         #endregion
 
 
@@ -354,6 +353,10 @@ namespace Client2
         //--------------------------------------------------
         // КЛИКИ
         //--------------------------------------------------
+        private void btnCheckConnection_Click(object sender, EventArgs e)
+        {
+            CheckConnection();
+        }
         private void btnDisconnect_Click(object sender, EventArgs e)
         {
             // Отправляем запрос на отключение клиента
@@ -507,9 +510,17 @@ namespace Client2
             //// Обновляем состояние кнопок
             UpdateButtonStates();
         }
+        
         //--------------------------------------------------
         // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
         //--------------------------------------------------
+        /// <summary>
+        /// Поставить корабль
+        /// </summary>
+        /// <param name="ship"></param>
+        /// <param name="startX"></param>
+        /// <param name="startY"></param>
+        /// <param name="isVertical"></param>
         private void PlaceShip(Ship ship, int startX, int startY, bool isVertical)
         {
             // Добавляем корабль в буфер и удаляем его из списка кораблей
@@ -526,6 +537,15 @@ namespace Client2
             // Обновляем состояние кнопок
             UpdateButtonStates();
         }
+        
+        /// <summary>
+        /// Можно ли поставить корабль?
+        /// </summary>
+        /// <param name="ship"></param>
+        /// <param name="startX"></param>
+        /// <param name="startY"></param>
+        /// <param name="isVertical"></param>
+        /// <returns>true - можно; false - нельзя</returns>
         public bool CanPlaceShip(Ship ship, int startX, int startY, bool isVertical)
         {
             SeaCell startCell = new SeaCell(startX, startY, SeaCell.CellState.OccupiedByShip);
@@ -556,6 +576,14 @@ namespace Client2
 
             return true;
         }
+        
+        /// <summary>
+        /// Создает список ячеек текущего корабля для заполнения
+        /// </summary>
+        /// <param name="ship"></param>
+        /// <param name="startCell"></param>
+        /// <param name="isVertical"></param>
+        /// <returns></returns>
         private IEnumerable<SeaCell> GetShipCells(Ship ship, SeaCell startCell, bool isVertical)
         {
             List<SeaCell> cells = new List<SeaCell>();
@@ -575,6 +603,13 @@ namespace Client2
 
             return cells;
         }
+        
+        /// <summary>
+        /// Переместить образ текущего корабля
+        /// </summary>
+        /// <param name="currentShip"></param>
+        /// <param name="rowIndex"></param>
+        /// <param name="columnIndex"></param>
         private void MoveTo(Ship currentShip, int rowIndex, int columnIndex)
         {
             // Очистить предыдущие координаты корабля
@@ -618,6 +653,10 @@ namespace Client2
                 MessageBox.Show("Все корабли размещены!");
             }
         }
+        
+        /// <summary>
+        /// обновляет состояние кнопок когда все корабли расставлены и отправляются
+        /// </summary>
         private void UpdateButtonStates()
         {
             // Проверяем, есть ли расстановка кораблей
@@ -630,6 +669,10 @@ namespace Client2
             btnRandomPlacement.Enabled = hasShipPlacement;
             //btnSend.Enabled = hasShipPlacement;
         }
+        
+        /// <summary>
+        /// Обновить представление поля игрока при утверждении становки корабля
+        /// </summary>
         private void UpdateGridView()
         {
             // Сначала очищаем все ячейки кроме утвержденных
