@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -7,15 +8,24 @@ using System.Threading.Tasks;
 
 namespace Server2.Engine
 {
+    [ProtoContract]
     public class Game
     {
+        [ProtoMember(1)]
         public int GameId { get; set; }
+        [ProtoMember(2)]
         public List<Player> Players { get; set; }
+        [ProtoMember(3)]
         public Player CurrentPlayer { get; set; }
+        [ProtoMember(4)]
         public bool IsFilledGame { get; set; }
+        [ProtoMember(5)]
         public bool GameStarted { get; set; }
+        [ProtoMember(6)]
         public bool GameOver { get; set; }
+        [ProtoMember(7)]
         public Turn? LastTurn { get; set; }
+
 
    
 
@@ -23,10 +33,10 @@ namespace Server2.Engine
         {
             Players = new List<Player>();
             GameId = id;
-            
+            LastTurn = new Turn();
         }
 
-        public void ChangePlayer()  
+        public void ChangePlayer()
         {
             if (CurrentPlayer == Players[0])
             {
@@ -37,7 +47,11 @@ namespace Server2.Engine
                 CurrentPlayer = Players[0];
             }
         }
-
+        /// <summary>
+        /// Проверка на попадание и обновление последнего хода
+        /// </summary>
+        /// <param name="coordinates"></param>
+        /// <returns>попал/не попал(или нельзя уже)</returns>
         public bool CheckAttack(string coordinates)
         {
             // Разделение координат атаки по запятой
@@ -66,41 +80,54 @@ namespace Server2.Engine
                 return false; // Атака невозможна (клетка уже атакована или некорректные координаты)
             }
 
-            Turn lastTurn = new Turn
-            {
-                AtackedPlayer = opponent,
-                Atacker = CurrentPlayer,
-                X = x,
-                Y = y
-            };
+            //Turn lastTurn = new Turn
+            //{
+            //    AtackedPlayer = opponent,
+            //    Atacker = CurrentPlayer,
+            //    X = x,
+            //    Y = y
+            //};
+            LastTurn.AtackerID = CurrentPlayer.PlayerId;
+            LastTurn.AtackedPlayerID = opponent.PlayerId;
+            LastTurn.X = x;
+            LastTurn.Y = y;
 
             // Проверка, попал ли атакующий по кораблю
             if (targetCell.State == SeaCell.CellState.OccupiedByShip)
             {
                 // Получение объекта Ship, находящегося на атакованной клетке
-                Ship targetShip = opponent.PlayerSea.Ships.Find(ship => ship.ShipCells.Contains(targetCell));
+                Ship targetShip = opponent.PlayerSea.Ships.Find(ship => ship.ContainsCell(targetCell));
 
                 // Нанесение повреждения кораблю
                 targetShip.Damage();
                 targetCell.State = SeaCell.CellState.Attacked;
-                lastTurn.resultForNextPlayer = "opponent_shot";
+                LastTurn.resultForNextPlayer = "shot";
 
                 return true; // Атака успешна (попадание по кораблю)
             }
             // Обновление состояния целевой клетки
             targetCell.State = SeaCell.CellState.Attacked;
-            lastTurn.resultForNextPlayer = "opponent_fail";
-            LastTurn = lastTurn;
+            LastTurn.resultForNextPlayer = "fail";
+           // LastTurn = lastTurn;
             return false; // Атака неудачна (промах)
         }
     }
-
+    [ProtoContract]
     public class Turn
     {
-        public Player AtackedPlayer { get; set; }
-        public Player Atacker { get; set; }
+        [ProtoMember(1)]
+        public string AtackedPlayerID { get; set; }
+        [ProtoMember(2)]
+        public string AtackerID { get; set; }
+        [ProtoMember(3)]
         public int X { get; set; }
+        [ProtoMember(4)]
         public int Y { get; set; }
-        public string resultForNextPlayer { get; set; } //opponent_fail или opponent_shot - результат для текущего игрока
+        [ProtoMember(5)]
+        public string resultForNextPlayer { get; set; } //fail или shot - результат для текущего игрока
+        public Turn()
+        {
+            //resultForNextPlayer = "NotAlredy";
+        }
     }
 }

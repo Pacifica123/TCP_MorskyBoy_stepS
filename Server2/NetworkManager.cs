@@ -15,11 +15,14 @@ namespace Server2
     {
         private List<Game> games;
         private int GAME_ID_COUNTER = 0;
+        private GameManager manager;
 
         public NetworkManager()
         {
             games = new List<Game>();
+            manager = new GameManager();
         }
+
         /// <summary>
         /// Весь общий процесс работы сервера
         /// </summary>
@@ -74,9 +77,9 @@ namespace Server2
                     }
                 }
                 Task.Run(() => ProcessClient(client));
-                
             }
         }
+        
         /// <summary>
         /// Главный механизм обработки запросов клиентов и ответа на них
         /// </summary>
@@ -84,30 +87,48 @@ namespace Server2
         private void ProcessClient(TcpClient client)
         {
             NetworkStream stream = client.GetStream();
-            byte[] buffer = new byte[2048];
+            byte[] buffer = new byte[4000];
             int bytesRead;
 
-            while (client.Connected && (bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
+            try
             {
-                string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                string response = ProcessMessage(message, client);
+                while (client.Connected && (bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    string response = ProcessMessage(message, client);
+                    if (response == "disconnected")
+                    {
+                        string id = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+                        RemovePlayer(id);
+                        client.Close();
+                        break;
+                    }
+                    byte[] responseBytes = Encoding.UTF8.GetBytes(response);
+                    stream.Write(responseBytes, 0, responseBytes.Length);
+                }
 
-                byte[] responseBytes = Encoding.UTF8.GetBytes(response);
-                stream.Write(responseBytes, 0, responseBytes.Length);
+                client.Close();
             }
-
-            client.Close();
+            catch //TODO:игра висит без дела и клиент не может повторно зайти
+            {
+                string id = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+                RemovePlayer(id);
+                Console.WriteLine($"Клиент {id} самостоятельно отключился");
+                client.Close();
+            }
         }
+
         /// <summary>
         /// ядро механизма обработки запросов клиентов
         /// </summary>
         /// <param name="message">полученное сообщение</param>
         /// <param name="client"></param>
-        /// <returns></returns>
+        /// <returns>Ответ сервера</returns>
         private string ProcessMessage(string message, TcpClient client)
         {
             // Обработка полученного сообщения и возвращение ответа
             string id = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+            manager.CheckGameOver(FindGameById(FindPlayerById(id).GameId));
             switch (message)
             {
                 // подключени
@@ -122,57 +143,46 @@ namespace Server2
                 // ход атакующего
                 case var attackMessage when attackMessage.StartsWith("Attack:"):
                     string coordinates = attackMessage.Substring("Attack:".Length);
-                    return ("AttackResult"+ProcessAttack(coordinates, client));
+                    ProcessAttack(coordinates, client);
+                    //return ("AttackResult"+ProcessAttack(coordinates, client));
+                    return "";
                 // периодический спрос атакуемого
-                case "OpponentAlreadyAtacked?":
-                    Player thisPlayer = FindPlayerById(id);
-                    return ProcessAttackForOpponent(FindGameById(thisPlayer.GameId));
+                //case "OpponentAlreadyAtacked?":
+                //    Player thisPlayer = FindPlayerById(id);
+                //    return ProcessAttackForOpponent(FindGameById(thisPlayer.GameId));
                 case "disconnect":
                     RemovePlayer(id);
-                    return ""; //игроку уже ничто не нужно после отключения
-                case "get_state":
-                    return ("STATE" + GetStateJSON(id));
+                    Console.WriteLine($"Клиент {((IPEndPoint)client.Client.RemoteEndPoint).Address} самостоятельно отключился");
+                    client.Close();
+                    return "disconnected"; //игроку уже ничто не нужно после отключения
+                //case "get_state":
+                //    return (GetStateBin_String(id));
+                case "get_last":
+                    return ("LastTurn:" + JsonConvert.SerializeObject(FindGameById(FindPlayerById(id).GameId).LastTurn));
                 // непонятная дичь
                 default:
                     return "Default";
             }
         }
 
-        private string GetStateJSON(string id)
-        {
-            Game thisGame = FindGameById(FindPlayerById(id).GameId);
-            Console.WriteLine($"Игрок {id} запросил текущее состояние игры");
-            return JsonConvert.SerializeObject(thisGame);
-        }
-
+        #region ПОД ПЕРЕНОС В GameManager
+        //TODO: переместить в GameManager
         private void RemovePlayer(string id)
         {
             Player thisPlayer = FindPlayerById(id);
-            Game thisGame = FindGameById(thisPlayer.GameId);
-            thisGame.Players.Remove(thisPlayer);
-            
+            if (thisPlayer != null)
+            {
+                Game thisGame = FindGameById(thisPlayer.GameId);
+                thisGame.Players.Remove(thisPlayer);
+
+                if (thisGame.Players.Count == 0)
+                {
+                    games.Remove(thisGame);
+                }
+            }
+            int test = 0;
         }
 
-        /// <summary>
-        /// Ответ на каждый 10-секундый вопрос клиента о том сходил ли оппонент
-        /// </summary>
-        /// <returns>информацию о том, попал ли оппонент и куда в формате "opponent_*,X,Y"</returns>
-        /// <exception cref="NotImplementedException"></exception>
-        private string ProcessAttackForOpponent(Game game)
-        {
-            string answer = "OpponentAttackResult:";
-            answer += game.LastTurn.resultForNextPlayer; //tokens[0]
-            answer += "," + game.LastTurn.X.ToString(); //tokens[1]
-            answer += "," + game.LastTurn.Y.ToString(); //tokens[2]
-            return answer;
-        }
-
-        /// <summary>
-        /// Расстановка кораблей для игрока
-        /// </summary>
-        /// <param name="placementJSON">сериализованная строка - список кораблей</param>
-        /// <param name="client"></param>
-        /// <returns>тоже что и CheckSecondPlayer</returns>
         private string placementShips(string placementJSON, TcpClient client)
         {
             
@@ -210,6 +220,7 @@ namespace Server2
                 return "Player not found";
             }
         }
+        
         /// <summary>
         /// Проверка на второго игрока и его гоовность для первого
         /// </summary>
@@ -241,6 +252,7 @@ namespace Server2
 
             return "GameStarted:"+game.CurrentPlayer.PlayerId; //чей ход
         }
+
         private Player FindPlayerById(string playerId)
         {
             foreach (var game in games)
@@ -260,6 +272,49 @@ namespace Server2
         {
             return games.FirstOrDefault(g => g.GameId == gameId);
         }
+        private void AddPlayerToGame(TcpClient client, Game game)
+        {
+            // Создаем нового игрока с указанным ID и привязываем его к игре
+            Player player = new Player(GeneratePlayerId(client), game);
+            game.Players.Add(player);
+            Console.WriteLine($"Присоединился игрок:{player.PlayerId} к игре: {player.GameId}");
+        }
+
+        private string GeneratePlayerId(TcpClient client)
+        {
+            // Получение IP-адреса клиента
+            string ipAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+
+            return ipAddress;
+        }
+        private void ProcessAttack(string coordinates, TcpClient client)
+        {
+            string id = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+            Player thisPlayer = FindPlayerById(id);
+            Game thisGame = FindGameById(thisPlayer.GameId);
+            // Проверка правила чередования хода
+            //if (thisGame.CurrentPlayer != FindPlayerById(id)) 
+            //{
+            //    return "NotYourTurn"; // Возвращаем сообщение, что сейчас не ваш ход
+            //}
+
+            // Обработка атаки на сервер
+            bool isHit = thisGame.CheckAttack(coordinates); // Проверяем атаку на попадание
+            if (isHit)
+            {
+                thisGame.CurrentPlayer = thisPlayer; // Ход остается у текущего клиента
+                //return ("you_shot,"+coordinates);
+            }
+            else
+            {
+                // Ход передается оппоненту
+                thisGame.ChangePlayer();
+
+                //return ("you_fail,"+coordinates);
+            }
+        }
+        #endregion
+
         private bool IsClientAlreadyInGame(TcpClient client)
         {
             string clientId = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
@@ -277,49 +332,5 @@ namespace Server2
 
             return false; // Клиент не числится в игре
         }
-        private void AddPlayerToGame(TcpClient client, Game game)
-        {
-            // Создаем нового игрока с указанным ID и привязываем его к игре
-            Player player = new Player(GeneratePlayerId(client), game);
-            //game.AddPlayer(player);
-            game.Players.Add(player);
-            Console.WriteLine($"Присоединился игрок:{player.PlayerId} к игре: {player.GameId}");
-            //client.AssignGame(game);
-        }
-        private string GeneratePlayerId(TcpClient client)
-        {
-            // Получение IP-адреса клиента
-            string ipAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
-
-            return ipAddress;
-        }
-        private string ProcessAttack(string coordinates, TcpClient client)
-        {
-            string id = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
-            Player thisPlayer = FindPlayerById(id);
-            Game thisGame = FindGameById(thisPlayer.GameId);
-            // Проверка правила чередования хода
-            if (thisGame.CurrentPlayer != FindPlayerById(id)) 
-            {
-                return "NotYourTurn"; // Возвращаем сообщение, что сейчас не ваш ход
-            }
-
-            // Обработка атаки на сервер
-            bool isHit = thisGame.CheckAttack(coordinates); // Проверяем атаку на попадание
-            if (isHit)
-            {
-                thisGame.CurrentPlayer = thisPlayer; // Ход остается у текущего клиента
-                return "you_shot";
-            }
-            else
-            {
-                // Ход передается оппоненту
-                thisGame.ChangePlayer();
-
-                return "you_fail";
-            }
-        }
-
-
     }
 }

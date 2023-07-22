@@ -14,54 +14,48 @@ namespace Server2.Engine
             game.GameStarted = true;
         }
 
-        public void EndGame(Game game)
+        /// <summary>
+        /// Для заданной игры устанавливает флаг GameOver и в последний ход записывает IPID победитиля
+        /// </summary>
+        /// <param name="game"></param>
+        /// <param name="win"></param>
+        private void EndGame(Game game, Player win)
         {
             game.GameOver = true;
+            game.LastTurn.resultForNextPlayer = "WIN:" + win.PlayerId;
         }
-        public void Rasstanaovka(Game game, string playerId, List<Ship> ships)
-        {
-            Player currentPlayer = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
 
-            if (currentPlayer != null)
+        /// <summary>
+        /// Проверяет а также производит процесс завершения игры если true
+        /// </summary>
+        /// <param name="game"></param>
+        /// <returns></returns>
+        public bool CheckGameOver(Game game)
+        {
+            if (game.Players.Count < 2) return false;
+            
+            if (CheckAllShipsDestructed(game.Players[0].PlayerSea.Ships) || CheckAllShipsDestructed(game.Players[1].PlayerSea.Ships))
             {
-                currentPlayer.PlayerSea.Ships = ships;
+                EndGame(game, CheckAllShipsDestructed(game.Players[0].PlayerSea.Ships) ? game.Players[1] : game.Players[0]);
+                return true;
             }
+            return false;
+
         }
-        public string Turn(Game game, string attackingPlayerId, int x, int y)
+
+        /// <summary>
+        ///проверка все ли корабли разрушены на поле
+        /// </summary>
+        /// <param name="SeaOfShips"></param>
+        /// <returns></returns>
+        private bool CheckAllShipsDestructed(List<Ship> SeaOfShips)
         {
-            Player attackingPlayer = game.Players.FirstOrDefault(p => p.PlayerId == attackingPlayerId);
-            Player defendingPlayer = game.Players.FirstOrDefault(p => p.PlayerId != attackingPlayerId);
-
-            if (attackingPlayer == null || defendingPlayer == null)
+            if (SeaOfShips == null || SeaOfShips.Count == 0) return false;
+            foreach (Ship ship in SeaOfShips)
             {
-                return "Ошибка: неверный игрок";
+                if (ship.IsDestructed == false) return false;
             }
-
-            SeaCell targetCell = defendingPlayer.PlayerSea.SeaCells.FirstOrDefault(c => c.X == x && c.Y == y);
-
-            if (targetCell == null)
-            {
-                return "Ошибка: неверные координаты";
-            }
-
-            if (targetCell.State == CellState.Attacked)
-            {
-                return "Ошибка: клетка уже атакована";
-            }
-
-            if (targetCell.State == CellState.OccupiedByShip)
-            {
-                targetCell.State = CellState.Attacked;
-                Ship targetedShip = defendingPlayer.PlayerSea.Ships.FirstOrDefault(s => s.ShipCells.Contains(targetCell));
-
-                if (targetedShip != null)
-                {
-                    targetedShip.Damage();
-                    if (targetedShip.IsDestructed) defendingPlayer.PlayerSea.Ships.Remove(targetedShip); 
-                }
-            }
-
-            return "Ход выполнен успешно";
+            return true;
         }
     }
 }
