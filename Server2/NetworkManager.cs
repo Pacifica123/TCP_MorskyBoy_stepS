@@ -147,7 +147,7 @@ namespace Server2
                     var thisGame = FindGameById(FindPlayerById(id).GameId);
                     //return ("AttackResult"+ProcessAttack(coordinates, client));
                     // return "";
-                    return ("ProcessAtackOnYou" + thisGame.LastTurn);
+                    return ("ProcessAtackOnYou:" + thisGame.LastTurn);
                 // периодический спрос атакуемого
                 //case "OpponentAlreadyAtacked?":
                 //    Player thisPlayer = FindPlayerById(id);
