@@ -264,6 +264,10 @@ namespace Client2
                     break;
                 case "Good!":
                     break;
+                case string result when result.Contains("ProcessAtackOnYou:"):
+                    if (isGameOver) return;
+                    ProcessLastTurn(result.Substring("ProcessAtackOnYou:".Length), client);
+                    break;
                 case "":
                     break; //заглушка пока на закомментированные методы на Сервере
                 default:

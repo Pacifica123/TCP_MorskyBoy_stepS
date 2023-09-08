@@ -144,8 +144,10 @@ namespace Server2
                 case var attackMessage when attackMessage.StartsWith("Attack:"):
                     string coordinates = attackMessage.Substring("Attack:".Length);
                     ProcessAttack(coordinates, client);
+                    var thisGame = FindGameById(FindPlayerById(id).GameId);
                     //return ("AttackResult"+ProcessAttack(coordinates, client));
-                    return "";
+                    // return "";
+                    return ("ProcessAtackOnYou" + thisGame.LastTurn);
                 // периодический спрос атакуемого
                 //case "OpponentAlreadyAtacked?":
                 //    Player thisPlayer = FindPlayerById(id);
@@ -293,10 +295,17 @@ namespace Server2
             Player thisPlayer = FindPlayerById(id);
             Game thisGame = FindGameById(thisPlayer.GameId);
             // Проверка правила чередования хода
-            //if (thisGame.CurrentPlayer != FindPlayerById(id)) 
-            //{
-            //    return "NotYourTurn"; // Возвращаем сообщение, что сейчас не ваш ход
-            //}
+            if (thisGame.CurrentPlayer != FindPlayerById(id))
+            {
+                return; // Возвращаем сообщение, что сейчас не ваш ход
+            }
+            string id1 = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+            if (FindPlayerById(id1) != games[0].CurrentPlayer)
+            {
+                Console.WriteLine("============================================");
+                Console.WriteLine("ДАБЛ ХОД !!!!!!!!!!!!!!!!!!!!");
+                Console.WriteLine("============================================");
+            }
 
             // Обработка атаки на сервер
             bool isHit = thisGame.CheckAttack(coordinates); // Проверяем атаку на попадание

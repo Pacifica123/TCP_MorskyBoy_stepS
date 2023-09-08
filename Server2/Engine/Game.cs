@@ -57,6 +57,8 @@ namespace Server2.Engine
             // Разделение координат атаки по запятой
             string[] coordinatesArray = coordinates.Split(',');
 
+            
+
             // Проверка корректности координат атаки
             if (coordinatesArray.Length != 2)
             {
